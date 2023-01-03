@@ -1,6 +1,7 @@
 package ast
 
 import trace.DebugPrints.eprintln
+import sygus.{Predicate, Predicates}
 
 trait QuaternaryOpNode[T] extends ASTNode
 {
@@ -8,15 +9,19 @@ trait QuaternaryOpNode[T] extends ASTNode
   val arg1: ASTNode
   val arg2: ASTNode
   val arg3: ASTNode
-
-  lazy val values: List[T] = arg0.values
-    .zip(arg1.values)
-    .zip(arg2.values)
-    .zip(arg3.values)
-    .map(tup => doOp(tup._1._1._1, tup._1._1._2, tup._1._2, tup._2)) match {
-    case l if l.forall(_.isDefined) => l.map(_.get)
-    case _ => Nil
+  override def computeOnContext(ctx: Map[String, Any]): Option[Any] =
+  {
+    doOp(predicates.getExampleValue(arg0.values, ctx),predicates.getExampleValue(arg1.values, ctx),
+      predicates.getExampleValue(arg2.values, ctx), predicates.getExampleValue(arg3.values, ctx))
   }
+//  lazy val values: List[T] = arg0.values
+//    .zip(arg1.values)
+//    .zip(arg2.values)
+//    .zip(arg3.values)
+//    .map(tup => doOp(tup._1._1._1, tup._1._1._2, tup._1._2, tup._2)) match {
+//    case l if l.forall(_.isDefined) => l.map(_.get)
+//    case _ => Nil
+//  }
 
   override val height: Int = 1 + Math.max(arg0.height, Math.max(arg1.height, Math.max(arg2.height, arg3.height)))
   override val terms : Int = 1 + arg0.terms + arg1.terms + arg2.terms + arg3.terms
@@ -40,12 +45,12 @@ trait QuaternaryOpNode[T] extends ASTNode
     arg0.usesVariables || arg1.usesVariables ||
       arg2.usesVariables || arg3.usesVariables
 
-  override def updateValues = null
 
 }
 
 // TODO Test is extensively before adding it
-class QuaternarySubstring(val arg0: PyStringNode, val arg1: PyIntNode, val arg2: PyIntNode, val arg3: PyIntNode) extends QuaternaryOpNode[String] with PyStringNode
+class QuaternarySubstring(val arg0: PyStringNode, val arg1: PyIntNode,val arg2: PyIntNode,
+                          val arg3: PyIntNode,  val predicates: Predicates) extends QuaternaryOpNode[String] with PyStringNode
 {
   override protected val parenless: Boolean = false
   override lazy val code: String =
@@ -83,5 +88,5 @@ class QuaternarySubstring(val arg0: PyStringNode, val arg1: PyIntNode, val arg2:
       a0.asInstanceOf[PyStringNode],
       a1.asInstanceOf[PyIntNode],
       a2.asInstanceOf[PyIntNode],
-      a3.asInstanceOf[PyIntNode])
+      a3.asInstanceOf[PyIntNode], predicates)
 }

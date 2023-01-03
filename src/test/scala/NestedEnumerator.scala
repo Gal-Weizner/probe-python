@@ -68,7 +68,7 @@ class NestedEnumerator extends JUnitSuite {
         |}""".stripMargin, true)
     val oeManager = new InputsValuesManager()
     val bank = mutable.Map[Int, mutable.ArrayBuffer[ASTNode]]()
-    val enumerator = new enumeration.PyProbEnumerator(task.vocab, oeManager, task.examples.map(_.input), false, false, 0, bank,
+    val enumerator = new enumeration.PyProbEnumerator(task.vocab, oeManager, task.examples.map(_.input), false, 0, bank,
       bank)
     assertEquals(enumerator.hasNext, true)
     assertEquals(5,task.vocab.leavesMakers.size)

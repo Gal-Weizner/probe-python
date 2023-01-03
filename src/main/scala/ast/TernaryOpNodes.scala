@@ -3,10 +3,11 @@ package ast
 import enumeration.Contexts
 import org.apache.commons.lang3.StringUtils
 import trace.DebugPrints.eprintln
+import sygus.Predicates
 
 trait TernaryOpNode[T] extends ASTNode
 {
-  lazy val values: List[T] = arg0.values.zip(arg1.values).zip(arg2.values).map(tup => doOp(tup._1._1, tup._1._2, tup._2)).filter(_.isDefined).map(_.get)
+  //lazy val values: List[T] = arg0.values.zip(arg1.values).zip(arg2.values).map(tup => doOp(tup._1._1, tup._1._2, tup._2)).filter(_.isDefined).map(_.get)
   override val height: Int = 1 + Math.max(arg0.height, Math.max(arg1.height, arg2.height))
   override val terms : Int = 1 + arg0.terms + arg1.terms + arg2.terms
   override val children: Iterable[ASTNode] = Iterable(arg0, arg1, arg2)
@@ -17,6 +18,9 @@ trait TernaryOpNode[T] extends ASTNode
 
   assert(arg0.values.length == arg1.values.length && arg1.values.length == arg2.values.length)
 
+  override def computeOnContext(ctx: Map[String, Any]): Option[Any] = {
+    doOp(predicates.getExampleValue(arg0.values, ctx), predicates.getExampleValue(arg1.values, ctx), predicates.getExampleValue(arg2.values, ctx))
+  }
   def doOp(a0: Any, a1: Any, a2: Any): Option[T]
 
   def make(a0: ASTNode, a1: ASTNode, a2: ASTNode): TernaryOpNode[T]
@@ -29,7 +33,8 @@ trait TernaryOpNode[T] extends ASTNode
   }
 }
 
-case class StringReplace(val arg0: StringNode, val arg1: StringNode, val arg2: StringNode) extends TernaryOpNode[String] with StringNode {
+case class StringReplace(val arg0: StringNode, val arg1: StringNode, val arg2: StringNode,
+                         val predicates: Predicates) extends TernaryOpNode[String] with StringNode {
   override protected val parenless: Boolean = true
 
   override def doOp(a0: Any, a1: Any, a2: Any): Option[String] = (a0, a1, a2) match {
@@ -41,13 +46,11 @@ case class StringReplace(val arg0: StringNode, val arg1: StringNode, val arg2: S
   override lazy val code: String = List(arg0.code, arg1.code, arg2.code).mkString("(str.replace ", " ", ")")
 
   override def make(a0: ASTNode, a1: ASTNode, a2: ASTNode): TernaryOpNode[String] =
-    new StringReplace(a0.asInstanceOf[StringNode], a1.asInstanceOf[StringNode], a2.asInstanceOf[StringNode])
-
-  override def updateValues = copy(arg0.updateValues.asInstanceOf[StringNode],
-    arg1.updateValues.asInstanceOf[StringNode], arg2.updateValues.asInstanceOf[StringNode])
+    new StringReplace(a0.asInstanceOf[StringNode], a1.asInstanceOf[StringNode], a2.asInstanceOf[StringNode], predicates)
 }
 
-case class StringITE(val arg0: BoolNode, val arg1: StringNode, val arg2: StringNode) extends TernaryOpNode[String] with StringNode {
+case class StringITE(val arg0: BoolNode, val arg1: StringNode,
+                     val arg2: StringNode,  val predicates: Predicates) extends TernaryOpNode[String] with StringNode {
   override protected val parenless: Boolean = true
   override def doOp(a0: Any, a1: Any, a2: Any): Option[String] = (a0, a1, a2) match {
     case (a0, a1, a2) =>
@@ -58,12 +61,12 @@ case class StringITE(val arg0: BoolNode, val arg1: StringNode, val arg2: StringN
 
   override lazy val code: String = List(arg0.code,arg1.code,arg2.code).mkString("(ite "," ",")")
   override def make(a0: ASTNode, a1: ASTNode, a2: ASTNode): TernaryOpNode[String] =
-    new StringITE(a0.asInstanceOf[BoolNode], a1.asInstanceOf[StringNode], a2.asInstanceOf[StringNode])
-  override def updateValues = copy(arg0.updateValues.asInstanceOf[BoolNode],
-    arg1.updateValues.asInstanceOf[StringNode], arg2.updateValues.asInstanceOf[StringNode])
+    new StringITE(a0.asInstanceOf[BoolNode], a1.asInstanceOf[StringNode], a2.asInstanceOf[StringNode], predicates)
+
 }
 
-case class IntITE(val arg0: BoolNode, val arg1: IntNode, val arg2: IntNode) extends TernaryOpNode[Int] with IntNode {
+case class IntITE(val arg0: BoolNode, val arg1: IntNode,
+                  val arg2: IntNode,  val predicates: Predicates) extends TernaryOpNode[Int] with IntNode {
   override protected val parenless: Boolean = true
 
   override def doOp(a0: Any, a1: Any, a2: Any): Option[Int] = (a0, a1, a2) match {
@@ -75,13 +78,13 @@ case class IntITE(val arg0: BoolNode, val arg1: IntNode, val arg2: IntNode) exte
 
   override lazy val code: String = List(arg0.code,arg1.code,arg2.code).mkString("(ite "," ",")")
   override def make(a0: ASTNode, a1: ASTNode, a2: ASTNode): TernaryOpNode[Int] =
-    new IntITE(a0.asInstanceOf[BoolNode], a1.asInstanceOf[IntNode], a2.asInstanceOf[IntNode])
-  override def updateValues = copy(arg0.updateValues.asInstanceOf[BoolNode],
-    arg1.updateValues.asInstanceOf[IntNode], arg2.updateValues.asInstanceOf[IntNode])
+    new IntITE(a0.asInstanceOf[BoolNode], a1.asInstanceOf[IntNode], a2.asInstanceOf[IntNode], predicates)
+
 
 }
 
-case class Substring(val arg0: StringNode, val arg1: IntNode, val arg2: IntNode) extends TernaryOpNode[String] with StringNode {
+case class Substring(val arg0: StringNode, val arg1: IntNode,
+                     val arg2: IntNode,  val predicates: Predicates) extends TernaryOpNode[String] with StringNode {
   override protected val parenless: Boolean = true
 
   override def doOp(a0: Any, a1: Any, a2: Any): Option[String] = (a0, a1, a2) match {
@@ -96,12 +99,11 @@ case class Substring(val arg0: StringNode, val arg1: IntNode, val arg2: IntNode)
 
   override lazy val code: String = List(arg0.code,arg1.code,arg2.code).mkString("(str.substr "," ",")")
   override def make(a0: ASTNode, a1: ASTNode, a2: ASTNode): TernaryOpNode[String] =
-    new Substring(a0.asInstanceOf[StringNode], a1.asInstanceOf[IntNode], a2.asInstanceOf[IntNode])
-  override def updateValues = copy(arg0.updateValues.asInstanceOf[StringNode],
-    arg1.updateValues.asInstanceOf[IntNode], arg2.updateValues.asInstanceOf[IntNode])
+    new Substring(a0.asInstanceOf[StringNode], a1.asInstanceOf[IntNode], a2.asInstanceOf[IntNode], predicates)
 }
 
-case class IndexOf(val arg0: StringNode, val arg1: StringNode, val arg2: IntNode) extends TernaryOpNode[Int] with IntNode {
+case class IndexOf(val arg0: StringNode, val arg1: StringNode,
+                   val arg2: IntNode,  val predicates: Predicates) extends TernaryOpNode[Int] with IntNode {
   override protected val parenless: Boolean = true
 
   override def doOp(a0: Any, a1: Any, a2: Any): Option[Int] = (a0, a1, a2) match {
@@ -111,12 +113,12 @@ case class IndexOf(val arg0: StringNode, val arg1: StringNode, val arg2: IntNode
   }
   override lazy val code: String = List(arg0.code,arg1.code,arg2.code).mkString("(str.indexof "," ",")")
   override def make(a0: ASTNode, a1: ASTNode, a2: ASTNode): TernaryOpNode[Int] =
-    new IndexOf(a0.asInstanceOf[StringNode], a1.asInstanceOf[StringNode], a2.asInstanceOf[IntNode])
-  override def updateValues = copy(arg0.updateValues.asInstanceOf[StringNode],
-    arg1.updateValues.asInstanceOf[StringNode], arg2.updateValues.asInstanceOf[IntNode])
+    new IndexOf(a0.asInstanceOf[StringNode], a1.asInstanceOf[StringNode], a2.asInstanceOf[IntNode], predicates)
+
 }
 
-case class BVITE(val arg0: BoolNode, val arg1: BVNode, val arg2: BVNode) extends TernaryOpNode[Long] with BVNode {
+case class BVITE(val arg0: BoolNode, val arg1: BVNode,
+                 val arg2: BVNode,  val predicates: Predicates) extends TernaryOpNode[Long] with BVNode {
   override protected val parenless: Boolean = true
 
   override def doOp(a0: Any, a1: Any, a2: Any): Option[Long] = (a0, a1, a2) match {
@@ -127,12 +129,12 @@ case class BVITE(val arg0: BoolNode, val arg1: BVNode, val arg2: BVNode) extends
   }
   override val code: String = List(arg0.code,arg1.code,arg2.code).mkString("(ite "," ",")")
   override def make(a0: ASTNode, a1: ASTNode, a2: ASTNode): TernaryOpNode[Long] =
-    new BVITE(a0.asInstanceOf[BoolNode], a1.asInstanceOf[BVNode], a2.asInstanceOf[BVNode])
-  override def updateValues = copy(arg0.updateValues.asInstanceOf[BoolNode],
-    arg1.updateValues.asInstanceOf[BVNode], arg2.updateValues.asInstanceOf[BVNode])
+    new BVITE(a0.asInstanceOf[BoolNode], a1.asInstanceOf[BVNode], a2.asInstanceOf[BVNode], predicates)
+
 }
 
-case class PyStringReplace(val arg0: PyStringNode, val arg1: PyStringNode, val arg2: PyStringNode) extends TernaryOpNode[String] with PyStringNode
+case class PyStringReplace(val arg0: PyStringNode, val arg1: PyStringNode,
+                           val arg2: PyStringNode, val predicates: Predicates) extends TernaryOpNode[String] with PyStringNode
 {
   override protected val parenless: Boolean = false
   override lazy val code: String =
@@ -145,13 +147,12 @@ case class PyStringReplace(val arg0: PyStringNode, val arg1: PyStringNode, val a
   }
 
   override def make(a0: ASTNode, a1: ASTNode, a2: ASTNode): TernaryOpNode[String] =
-    new PyStringReplace(a0.asInstanceOf[PyStringNode], a1.asInstanceOf[PyStringNode], a2.asInstanceOf[PyStringNode])
+    new PyStringReplace(a0.asInstanceOf[PyStringNode], a1.asInstanceOf[PyStringNode], a2.asInstanceOf[PyStringNode], predicates)
 
-  override def updateValues = copy(arg0.updateValues.asInstanceOf[PyStringNode],
-    arg1.updateValues.asInstanceOf[PyStringNode], arg2.updateValues.asInstanceOf[PyStringNode])
 }
 
-case class TernarySubstring(val arg0: PyStringNode, val arg1: PyIntNode, val arg2: PyIntNode) extends TernaryOpNode[String] with PyStringNode
+case class TernarySubstring(val arg0: PyStringNode, val arg1: PyIntNode,
+                            val arg2: PyIntNode,  val predicates: Predicates) extends TernaryOpNode[String] with PyStringNode
 {
   override protected val parenless: Boolean = true
   override lazy val code: String =
@@ -173,8 +174,6 @@ case class TernarySubstring(val arg0: PyStringNode, val arg1: PyIntNode, val arg
   }
 
   override def make(a0: ASTNode, a1: ASTNode, a2: ASTNode): TernaryOpNode[String] =
-    new TernarySubstring(a0.asInstanceOf[PyStringNode], a1.asInstanceOf[PyIntNode], a2.asInstanceOf[PyIntNode])
+    new TernarySubstring(a0.asInstanceOf[PyStringNode], a1.asInstanceOf[PyIntNode], a2.asInstanceOf[PyIntNode], predicates)
 
-  override def updateValues = copy(arg0.updateValues.asInstanceOf[PyStringNode],
-    arg1.updateValues.asInstanceOf[PyIntNode], arg2.updateValues.asInstanceOf[PyIntNode])
 }

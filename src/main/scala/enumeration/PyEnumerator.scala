@@ -4,10 +4,11 @@ import java.io.FileOutputStream
 import ast.ASTNode
 import trace.DebugPrints
 import vocab.{VocabFactory, VocabMaker}
+import sygus.Predicates
 
 import scala.collection.mutable
 
-class PyEnumerator(val vocab: VocabFactory, val oeManager: OEValuesManager, val contexts: List[Map[String,Any]]) extends Iterator[ASTNode]{
+class PyEnumerator(val vocab: VocabFactory, val oeManager: OEValuesManager, val predicates: Predicates) extends Iterator[ASTNode]{
   override def toString(): String = "enumeration.Enumerator"
 
   var nextProgram: Option[ASTNode] = None
@@ -17,7 +18,7 @@ class PyEnumerator(val vocab: VocabFactory, val oeManager: OEValuesManager, val 
   var currLevelProgs: mutable.ListBuffer[ASTNode] = mutable.ListBuffer()
   var height = 0
   var rootMaker: Iterator[ASTNode] =
-    currIter.next().init(currLevelProgs.toList, contexts, vocab, height)
+    currIter.next().init(currLevelProgs.toList, predicates, vocab, height)
 
   ProbUpdate.probMap = ProbUpdate.createPyProbMap(vocab)
   ProbUpdate.priors = ProbUpdate.createPyPrior(vocab)
@@ -47,7 +48,7 @@ class PyEnumerator(val vocab: VocabFactory, val oeManager: OEValuesManager, val 
       // We are out of programs!
       if (!currIter.hasNext) return false
       val next = currIter.next()
-      rootMaker = next.init(prevLevelProgs.toList, contexts, this.vocab, height)
+      rootMaker = next.init(prevLevelProgs.toList, predicates, this.vocab, height)
     }
 
     true

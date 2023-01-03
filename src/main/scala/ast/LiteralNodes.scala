@@ -1,45 +1,46 @@
 package ast
-
+import sygus.Predicates
 import enumeration.Contexts
 
-abstract class LiteralNode[T](numContexts: Int) extends ASTNode{
-  assert(numContexts > 0)
+abstract class LiteralNode[T](numExamples: Int) extends ASTNode{
+  assert(numExamples > 0)
   val height = 0
   val terms = 1
   val value: T
-  override val values: List[T] = List.fill(numContexts)(value)
+
+  override def computeOnContext(ctx: Map[String, Any]) = Some(value)
   override val children: Iterable[ASTNode] = Iterable.empty
   def includes(varName: String): Boolean = false
   override lazy val usesVariables: Boolean = false
 
 }
-case class StringLiteral(val value: String, numContexts: Int) extends LiteralNode[String](numContexts) with StringNode{
+case class StringLiteral(val value: String, numExamples: Int,
+                         val predicates: Predicates) extends LiteralNode[String](numExamples) with StringNode{
   override lazy val code: String = '"' + value + '"' //escape?
   override protected val parenless: Boolean = true
-  override def updateValues = copy(value, numContexts = Contexts.contextLen)
-
 }
 
-case class IntLiteral(val value: Int, numContexts: Int) extends LiteralNode[Int](numContexts) with IntNode{
+case class IntLiteral(val value: Int, numExamples: Int,
+                      val predicates: Predicates) extends LiteralNode[Int](numExamples) with IntNode{
   override lazy val code: String = value.toString
   override protected val parenless: Boolean = true
-  override def updateValues = copy(value, numContexts = Contexts.contextLen)
 }
 
-case class BoolLiteral(val value: Boolean, numContexts: Int) extends LiteralNode[Boolean](numContexts) with BoolNode {
+case class BoolLiteral(val value: Boolean, numExamples: Int,
+                       val predicates: Predicates) extends LiteralNode[Boolean](numExamples) with BoolNode {
   override lazy val code: String = value.toString
   override protected val parenless: Boolean = true
-  override def updateValues = copy(value, numContexts = Contexts.contextLen)
 }
 
-case class BVLiteral(val value: Long, numContexts: Int) extends LiteralNode[Long](numContexts) with BVNode {
+case class BVLiteral(val value: Long, numExamples: Int,
+                     val predicates: Predicates) extends LiteralNode[Long](numExamples) with BVNode {
   override lazy val code: String = f"#x$value%016x"
   override protected val parenless: Boolean = true
-  override def updateValues = copy(value, numContexts = Contexts.contextLen)
 
 }
 
-case class PyStringLiteral(val value: String, numContexts: Int) extends LiteralNode[String](numContexts) with PyStringNode
+case class PyStringLiteral(val value: String, numExamples: Int,
+                           val predicates: Predicates) extends LiteralNode[String](numExamples) with PyStringNode
 {
   override protected val parenless: Boolean = true
   override val code: String = '"' + value.flatMap(c => if (c.toInt >= 32 && c.toInt <= 127 && c != '\\' && c != '"') c.toString
@@ -55,22 +56,21 @@ case class PyStringLiteral(val value: String, numContexts: Int) extends LiteralN
     case 13 => "\\r" //cr
     case _ => "\\x" + c.toInt.toHexString
   }) + '"'
-  override def updateValues = copy(value, numContexts = Contexts.contextLen)
 
 }
 
-case class PyIntLiteral(val value: Int, numContexts: Int) extends LiteralNode[Int](numContexts) with PyIntNode
+case class PyIntLiteral(val value: Int, numExamples: Int,
+                        val predicates: Predicates) extends LiteralNode[Int](numExamples) with PyIntNode
 {
   override protected val parenless: Boolean = true
   override val code: String = value.toString
-  override def updateValues = copy(value, numContexts = Contexts.contextLen)
 
 }
 
-case class PyBoolLiteral(val value: Boolean, numContexts: Int) extends LiteralNode[Boolean](numContexts) with PyBoolNode
+case class PyBoolLiteral(val value: Boolean, numExamples: Int,
+                         val predicates: Predicates) extends LiteralNode[Boolean](numExamples) with PyBoolNode
 {
   override protected val parenless: Boolean = true
   override val code: String = value.toString.capitalize
-  override def updateValues = copy(value, numContexts = Contexts.contextLen)
 
 }

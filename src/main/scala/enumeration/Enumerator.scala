@@ -3,10 +3,12 @@ package enumeration
 import ast.ASTNode
 import trace.DebugPrints.dprintln
 import vocab.{VocabFactory, VocabMaker}
-
+import sygus.Predicates
 import scala.collection.mutable
 
-class Enumerator(val vocab: VocabFactory, val oeManager: OEValuesManager, val contexts: List[Map[String,Any]]) extends Iterator[ASTNode]{
+class Enumerator(val vocab: VocabFactory,
+                 val oeManager: OEValuesManager,
+                 val predicates: Predicates) extends Iterator[ASTNode]{
   override def toString(): String = "enumeration.Enumerator"
 
   var nextProgram: Option[ASTNode] = None
@@ -15,8 +17,9 @@ class Enumerator(val vocab: VocabFactory, val oeManager: OEValuesManager, val co
   var prevLevelProgs: mutable.ListBuffer[ASTNode] = mutable.ListBuffer()
   var currLevelProgs: mutable.ListBuffer[ASTNode] = mutable.ListBuffer()
   var height = 0
-  var rootMaker: Iterator[ASTNode] =
-    currIter.next().init(currLevelProgs.toList, contexts, vocab, height)
+  var rootMaker: Iterator[ASTNode] = {
+    currIter.next().init(currLevelProgs.toList, predicates, vocab, height)
+  }
 
   override def hasNext: Boolean = if (nextProgram.isDefined) true
   else {
@@ -44,7 +47,7 @@ class Enumerator(val vocab: VocabFactory, val oeManager: OEValuesManager, val co
       // We are out of programs!
       if (!currIter.hasNext) return false
       val next = currIter.next()
-      rootMaker = next.init(prevLevelProgs.toList, contexts, this.vocab, height)
+      rootMaker = next.init(prevLevelProgs.toList, predicates, this.vocab, height)
     }
 
     true

@@ -1,7 +1,7 @@
 package enumeration
 
 import ast._
-import sygus.SygusFileTask
+//import sygus.SygusFileTask
 import vocab.{VocabFactory}
 
 import scala.collection.mutable
@@ -24,30 +24,30 @@ object ProbUpdate {
       program.children.flatMap(c => getAllNodeTypes(c)).toSet + recurseValue
   }
 
-  def update(fitsMap: mutable.Map[(Class[_], Option[Any]), Double], currLevelProgs: mutable.ArrayBuffer[ASTNode], task: SygusFileTask): mutable.Map[(Class[_], Option[Any]), Double] = {
-    fitMap = fitsMap
-    for (program <- currLevelProgs) {
-      val exampleFit = task.fit(program)
-      val fit: Double = (exampleFit._1.toFloat) / exampleFit._2
-      if (fit > 0) {
-        val examplesPassed = task.fitExs(program)
-        if (!fitCost.contains(examplesPassed) || ((fitCost(examplesPassed) >= program.cost) && !fitProgs.contains(program.code))) {
-          fitCost += (examplesPassed -> program.cost)
-          fitProgs += program.code
-          val changed: Set[(Class[_], Option[Any])] = getAllNodeTypes(program)
-          for (changedNode <- changed) {
-            if (!fitMap.contains(changedNode) || fitMap(changedNode) > (1 - fit)) {
-              val update = expo(probMap(changedNode), (1- fit))
-              fitMap += (changedNode -> update)
-              probMap += (changedNode -> update)
-            }
-          }
-          //println(program.code, examplesPassed, program.cost)
-        }
-      }
-    }
-    fitMap
-  }
+//  def update(fitsMap: mutable.Map[(Class[_], Option[Any]), Double], currLevelProgs: mutable.ArrayBuffer[ASTNode], task: SygusFileTask): mutable.Map[(Class[_], Option[Any]), Double] = {
+//    fitMap = fitsMap
+//    for (program <- currLevelProgs) {
+//      val exampleFit = task.fit(program)
+//      val fit: Double = (exampleFit._1.toFloat) / exampleFit._2
+//      if (fit > 0) {
+//        val examplesPassed = task.fitExs(program)
+//        if (!fitCost.contains(examplesPassed) || ((fitCost(examplesPassed) >= program.cost) && !fitProgs.contains(program.code))) {
+//          fitCost += (examplesPassed -> program.cost)
+//          fitProgs += program.code
+//          val changed: Set[(Class[_], Option[Any])] = getAllNodeTypes(program)
+//          for (changedNode <- changed) {
+//            if (!fitMap.contains(changedNode) || fitMap(changedNode) > (1 - fit)) {
+//              val update = expo(probMap(changedNode), (1- fit))
+//              fitMap += (changedNode -> update)
+//              probMap += (changedNode -> update)
+//            }
+//          }
+//          //println(program.code, examplesPassed, program.cost)
+//        }
+//      }
+//    }
+//    fitMap
+//  }
 
   def updatePriors(probMap: mutable.Map[(Class[_], Option[Any]), Double]): Unit = {
     updateProb()

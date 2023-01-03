@@ -1,9 +1,10 @@
 package ast
 
-import ast.Types.Types
+import ast.Types.{Types, childOf}
 
 import scala.collection.immutable.WrappedString
 
+import sygus.Predicates
 trait MapCompNode[K,V] extends MapNode[K,V]
 {
   val list: IterableNode
@@ -11,30 +12,50 @@ trait MapCompNode[K,V] extends MapNode[K,V]
   val value: ASTNode
   val varName: String
 
+
   assert(key.values.length == value.values.length, "Key and value did not match")
 
   override val keyType: Types = Types.childOf(list.nodeType)
   override val valType: Types = value.nodeType
 
-  override val values: List[Map[K,V]] = {
-    if (list.values.isEmpty) {
-      Nil
-    } else {
-      val entries: Iterable[(K, V)] = key.values.zip(value.values).asInstanceOf[Iterable[(K,V)]]
-
-      list.values.head match {
-        case _: String => splitByIterable(list.values.asInstanceOf[List[String]].map(new WrappedString(_)), entries).map(_.toMap)
-        case _: Iterable[_] => splitByIterable(list.values.asInstanceOf[List[Iterable[_]]], entries).map(_.toMap)
-        case _ => list.values
-          .indices
-          .map(i => entries.slice(
-            i * entries.size / list.values.length,
-            (i+1) * entries.size / list.values.length))
-          .map(_.toMap)
-          .toList
-      }
+  override def computeOnContext(ctx: Map[String, Any]): Option[Any] = {
+    val value_t = predicates.getExampleValue(value.values, ctx)
+    var entry = key.computeOnContext(ctx).get
+//    entry = (entry, entry)
+    val entries: Iterable[(K, V)] = key.values.zip(value.values).asInstanceOf[Iterable[(K,V)]]
+    val res = list.values.head match {
+      case _: String => (value_t, entry)//splitByIterable(list.values.asInstanceOf[List[String]].map(new WrappedString(_)), entries).map(_.toMap)
+//      case _: String => splitByIterable(list.values.asInstanceOf[List[String]].map(new WrappedString(_)), entries).map(_.toMap)
+      case _: Iterable[_] => splitByIterable(list.values.asInstanceOf[List[Iterable[_]]], entries).map(_.toMap)
+      //        case _ => list.computeOnContext(ctx)
+      //          .map(i => entries.slice(
+      //            i * entries.size / list.values.length,
+      //            (i + 1) * entries.size / list.values.length))
+      //          .map(_.toMap)
+      //          .toList
+      //    }
     }
+    Some(res)
   }
+//  override val values: List[Map[K,V]] = {
+//    if (list.values.isEmpty) {
+//      Nil
+//    } else {
+//      val entries: Iterable[(K, V)] = key.values.zip(value.values).asInstanceOf[Iterable[(K,V)]]
+//
+//      list.values.head match {
+//        case _: String => splitByIterable(list.values.asInstanceOf[List[String]].map(new WrappedString(_)), entries).map(_.toMap)
+//        case _: Iterable[_] => splitByIterable(list.values.asInstanceOf[List[Iterable[_]]], entries).map(_.toMap)
+//        case _ => list.values
+//          .indices
+//          .map(i => entries.slice(
+//            i * entries.size / list.values.length,
+//            (i+1) * entries.size / list.values.length))
+//          .map(_.toMap)
+//          .toList
+//      }
+//    }
+//  }
 
   override val height: Int = 1 + Math.max(list.height, value.height)
   override val terms: Int = 1 + list.terms + value.terms
@@ -44,7 +65,6 @@ trait MapCompNode[K,V] extends MapNode[K,V]
   override def includes(varName: String): Boolean =
     varName.equals(this.varName) || list.includes(varName) || key.includes(varName) || value.includes(varName)
   override lazy val usesVariables: Boolean = list.usesVariables || key.usesVariables || value.usesVariables
-  override def updateValues = ???
 
 }
 
@@ -57,12 +77,17 @@ trait FilteredMapNode[K,V] extends MapNode[K,V]
   override val keyType: Types = map.keyType
   override val valType: Types = map.valType
 
-  override val values: List[Map[K,V]] = filterOp(map, filter)
+  //override val values: List[Map[K,V]] = filterOp(map, filter)
   override val height: Int = 1 + Math.max(map.height, filter.height)
   override val terms: Int = 1 + map.terms + filter.terms
   override val children: Iterable[ASTNode] = List(map, filter)
   override protected val parenless: Boolean = true
   override val code: String = s"{$keyName: ${map.code}[$keyName] for $keyName in ${map.code} if ${filter.code}}"
+
+  override def computeOnContext(ctx: Map[String, Any]): Option[List[Map[K,V]]] = {
+    Some(filterOp(map, filter))
+  }
+
   override def includes(varName: String): Boolean =
     varName.equals(this.keyName) || map.includes(varName) || filter.includes(varName)
   override lazy val usesVariables: Boolean = map.usesVariables || filter.usesVariables
@@ -86,46 +111,57 @@ trait FilteredMapNode[K,V] extends MapNode[K,V]
   }
   def filterOp(map: MapNode[K,V], filter: PyBoolNode) : List[Map[K,V]] =
   {
-    val keyNode: VariableNode[Boolean] = findKeyVar(filter.children).get.asInstanceOf[VariableNode[Boolean]]
-    val filterValues = splitByIterable(map.values, filter.values)
-    val keyValues = splitByIterable(map.values, keyNode.values)
-    map.values
-      .zip(keyValues.zip(filterValues).map(tup => tup._1.zip(tup._2)))
-      .map( {
-        case (valMap: Map[K,V], keyMap: Iterable[(K,Boolean)]) =>
-          valMap.filter({
-            case (k: K, _: V) => keyMap.find(_._1.equals(k)).get._2
-          })
-      })
+    ???
+//    val keyNode: VariableNode[Boolean] = findKeyVar(filter.children).get.asInstanceOf[VariableNode[Boolean]]
+//    val examples = map.predicates.predicates.map(pred => pred.observe(this).asInstanceOf[Iterable[Any]])
+//    val filterValues = splitByIterable(examples, filter.values)
+//    val keyValues = splitByIterable(examples, keyNode.values)
+//    map.values
+//      .zip(keyValues.zip(filterValues).map(tup => tup._1.zip(tup._2)))
+//      .map( {
+//        case (valMap: Map[K,V], keyMap: Iterable[(K,Boolean)]) =>
+//          valMap.filter({
+//            case (k: K, _: V) => keyMap.find(_._1.equals(k)).get._2
+//          })
+//      })
   }
-  override def updateValues = ???
 
 }
 
-class StringStringMapCompNode    (val list: PyStringNode,       val key: PyStringNode, val value: PyStringNode, val varName: String) extends MapCompNode[String,String]
-class StringIntMapCompNode       (val list: PyStringNode,       val key: PyStringNode, val value: PyIntNode,    val varName: String) extends MapCompNode[String,Int]
-class StringListStringMapCompNode(val list: ListNode[String], val key: PyStringNode, val value: PyStringNode, val varName: String) extends MapCompNode[String,String]
-class StringListIntMapCompNode   (val list: ListNode[String], val key: PyStringNode, val value: PyIntNode,    val varName: String) extends MapCompNode[String,Int]
-class IntStringMapCompNode       (val list: ListNode[Int],    val key: PyIntNode,    val value: PyStringNode, val varName: String) extends MapCompNode[Int,String]
-class IntIntMapCompNode          (val list: ListNode[Int],    val key: PyIntNode,    val value: PyIntNode,    val varName: String) extends MapCompNode[Int,Int]
+class StringStringMapCompNode    (val list: PyStringNode, val key: PyStringNode, val value: PyStringNode,
+                                  val varName: String, val predicates: Predicates) extends MapCompNode[String,String]
+class StringIntMapCompNode       (val list: PyStringNode, val key: PyStringNode, val value: PyIntNode,
+                                  val varName: String, val predicates: Predicates) extends MapCompNode[String,Int]
+class StringListStringMapCompNode(val list: ListNode[String], val key: PyStringNode, val value: PyStringNode,
+                                  val varName: String, val predicates: Predicates) extends MapCompNode[String,String]
+class StringListIntMapCompNode   (val list: ListNode[String], val key: PyStringNode, val value: PyIntNode,
+                                  val varName: String, val predicates: Predicates) extends MapCompNode[String,Int]
+class IntStringMapCompNode       (val list: ListNode[Int], val key: PyIntNode, val value: PyStringNode,
+                                  val varName: String, val predicates: Predicates) extends MapCompNode[Int,String]
+class IntIntMapCompNode          (val list: ListNode[Int], val key: PyIntNode, val value: PyIntNode,
+                                  val varName: String, val predicates: Predicates) extends MapCompNode[Int,Int]
 
-class StringStringFilteredMapNode(val map: MapNode[String,String], val filter: PyBoolNode, val keyName: String) extends FilteredMapNode[String,String]
+class StringStringFilteredMapNode(val map: MapNode[String,String], val filter: PyBoolNode,
+                                  val keyName: String, val predicates: Predicates) extends FilteredMapNode[String,String]
 {
   override def make(map: MapNode[String, String], filter: PyBoolNode, keyName: String): FilteredMapNode[String, String] =
-    new StringStringFilteredMapNode(map, filter, keyName)
+    new StringStringFilteredMapNode(map, filter, keyName, predicates)
 }
-class StringIntFilteredMapNode(val map: MapNode[String,Int], val filter: PyBoolNode, val keyName: String) extends FilteredMapNode[String,Int]
+class StringIntFilteredMapNode(val map: MapNode[String,Int], val filter: PyBoolNode,
+                               val keyName: String, val predicates: Predicates) extends FilteredMapNode[String,Int]
 {
   override def make(map: MapNode[String, Int], filter: PyBoolNode, keyName: String): FilteredMapNode[String, Int] =
-    new StringIntFilteredMapNode(map, filter, keyName)
+    new StringIntFilteredMapNode(map, filter, keyName, predicates)
 }
-class IntStringFilteredMapNode(val map: MapNode[Int,String], val filter: PyBoolNode, val keyName: String) extends FilteredMapNode[Int,String]
+class IntStringFilteredMapNode(val map: MapNode[Int,String], val filter: PyBoolNode,
+                               val keyName: String, val predicates: Predicates) extends FilteredMapNode[Int,String]
 {
   override def make(map: MapNode[Int, String], filter: PyBoolNode, keyName: String): FilteredMapNode[Int, String] =
-    new IntStringFilteredMapNode(map, filter, keyName)
+    new IntStringFilteredMapNode(map, filter, keyName, predicates)
 }
-class IntIntFilteredMapNode(val map: MapNode[Int,Int], val filter: PyBoolNode, val keyName: String) extends FilteredMapNode[Int,Int]
+class IntIntFilteredMapNode(val map: MapNode[Int,Int], val filter: PyBoolNode,
+                            val keyName: String, val predicates: Predicates) extends FilteredMapNode[Int,Int]
 {
   override def make(map: MapNode[Int, Int], filter: PyBoolNode, keyName: String): FilteredMapNode[Int, Int] =
-    new IntIntFilteredMapNode(map, filter, keyName)
+    new IntIntFilteredMapNode(map, filter, keyName, predicates)
 }

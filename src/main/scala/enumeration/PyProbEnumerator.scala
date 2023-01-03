@@ -2,6 +2,7 @@ package enumeration
 
 import java.io.FileOutputStream
 import ast.{ASTNode, IntIntFilteredMapNode, IntIntMapCompNode, IntStringFilteredMapNode, IntStringMapCompNode, IntToIntListCompNode, IntToStringListCompNode, PyMapGet, StringIntFilteredMapNode, StringIntMapCompNode, StringListIntMapCompNode, StringListStringMapCompNode, StringStringFilteredMapNode, StringStringMapCompNode, StringToIntListCompNode, StringToStringListCompNode}
+import sygus.{Predicate, Predicates}
 import vocab.{VocabFactory, VocabMaker}
 
 import scala.collection.mutable
@@ -9,8 +10,8 @@ import scala.collection.mutable.ArrayBuffer
 
 class PyProbEnumerator(val vocab: VocabFactory,
                        val oeManager: OEValuesManager,
-                       val contexts: List[Map[String,Any]],
-                       val probBased: Boolean, var nested: Boolean,
+                       val predicates_t: Predicates,
+                       var nested: Boolean,
                        var initCost: Int,
                        var mainBank: mutable.Map[Int, mutable.ArrayBuffer[ASTNode]],
                        var vars: mutable.Map[Int, mutable.ArrayBuffer[ASTNode]]) extends Iterator[ASTNode] {
@@ -45,23 +46,22 @@ class PyProbEnumerator(val vocab: VocabFactory,
   ProbUpdate.probMap = ProbUpdate.createPyProbMap(vocab)
   ProbUpdate.priors = ProbUpdate.createPyPrior(vocab)
   resetEnumeration()
-  Contexts.contextLen = this.contexts.length
-  Contexts.contexts = this.contexts
+//  Contexts.contextLen = this.predicates.num_of_examples
+//  Contexts.contexts = this.predicates.predicates.take(this.predicates.num_of_examples)
 
   mainBank.map(n => (n._1, n._2.filter(c => (!c.includes("key") && !c.includes("var"))))).
-  values.flatten.toList.map(p =>
-    if (p.values.length != Contexts.contextLen)
-      oeManager.isRepresentative(p.updateValues)
-    else oeManager.isRepresentative(p)) // OE
+  values.flatten.toList.map(p => oeManager.isRepresentative(p))
+//    if (p.values.length != Contexts.contextLen)
+//      oeManager.isRepresentative(p.updateValues)
+//    else oeManager.isRepresentative(p)) // OE
 
   if (vars != null) vars.values.flatten.toList.map(p => oeManager.isRepresentative(p)) // OE
-
   var rootMaker: Iterator[ASTNode] = currIterator.next().
-    probe_init(vocab, costLevel, contexts, mainBank, nested, varBank, vars)
+    probe_init(vocab, costLevel, predicates_t, mainBank, nested, varBank, vars)
 
   def resetEnumeration(): Unit = {
     currIterator = totalLeaves.sortBy(_.rootCost).iterator
-    rootMaker = currIterator.next().probe_init(vocab, costLevel, contexts, mainBank, nested, varBank, vars)
+    rootMaker = currIterator.next().probe_init(vocab, costLevel, predicates_t, mainBank, nested, varBank, vars)
     currLevelPrograms.clear()
     oeManager.clear()
   }
@@ -77,7 +77,7 @@ class PyProbEnumerator(val vocab: VocabFactory,
     while (rootMaker == null || !rootMaker.hasNext) {
       if (!currIterator.hasNext) { return false }
       val next = currIterator.next()
-      rootMaker = next.probe_init(vocab, costLevel, contexts, mainBank, nested, varBank, vars)
+      rootMaker = next.probe_init(vocab, costLevel, predicates_t, mainBank, nested, varBank, vars)
       if ((next.nodeType == classOf[StringToStringListCompNode]) || (next.nodeType == classOf[StringToIntListCompNode])
       || (next.nodeType == classOf[IntToStringListCompNode]) || (next.nodeType == classOf[IntToIntListCompNode])
       || (next.nodeType == classOf[StringStringMapCompNode]) || (next.nodeType == classOf[StringIntMapCompNode])

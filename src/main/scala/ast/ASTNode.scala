@@ -1,19 +1,27 @@
 package ast
 
 import ast.Types.Types
-import enumeration.{Contexts, ProbUpdate}
+import com.sun.jndi.ldap.LdapCtx
+import enumeration.{ProbUpdate}
+import sygus.{Predicates}
 trait ASTNode {
   val nodeType: Types.Types
-  val values: List[Any]
+  val predicates: Predicates
+  val values: List[Any] = predicates.predicates.map(pred => pred.observe(this)) match {
+    case l if l.forall(_.isDefined) => l.map(_.get)
+    case _ => Nil
+  }
   val code: String
   val height: Int
   val terms: Int
   val children: Iterable[ASTNode]
+  def computeOnContext(ctx: Map[String, Any]): Option[Any]
   def includes(varName: String): Boolean
   protected val parenless: Boolean
   def parensIfNeeded: String = if (height > 0 && !parenless) "(" + code + ")" else code
   val usesVariables: Boolean
   private var _cost : Option[Int] = None
+
   def cost: Int = {
     if (_cost.isEmpty) renewCost()
     _cost.get
@@ -22,22 +30,19 @@ trait ASTNode {
     children.foreach(_.renewCost)
     _cost = Some(ProbUpdate.getRootPrior(this) + children.map(c => c.cost).sum)
   }
-  def updateValues: ASTNode
 }
 
 trait StringNode extends ASTNode {
-  override val values: List[String]
   override val nodeType = Types.String
 
 }
 
 trait IntNode extends ASTNode {
-  override val values: List[Int]
   override val nodeType = Types.Int
 }
 
 trait BoolNode extends ASTNode {
-  override val values: List[Boolean]
+
   override val nodeType = Types.Bool
 }
 
@@ -56,23 +61,19 @@ trait IterableNode extends ASTNode {
 }
 
 trait PyStringNode extends IterableNode {
-  override val values: List[String]
   override val nodeType = Types.PyString
 }
 
 trait PyIntNode extends IterableNode {
-  override val values: List[Int]
   override val nodeType = Types.PyInt
 }
 
 trait PyBoolNode extends IterableNode {
-  override val values: List[Boolean]
   override val nodeType = Types.PyBool
 }
 
 trait ListNode[T] extends IterableNode {
   val childType: Types
-  override val values: List[Iterable[T]]
   override lazy val nodeType: Types = Types.List(childType)
 }
 
@@ -85,7 +86,6 @@ trait MapNode[K,V] extends IterableNode
   val keyType: Types
   val valType: Types
 
-  override val values: List[Map[K,V]]
   override lazy val nodeType: Types = Types.Map(keyType, valType)
 }
 
@@ -114,6 +114,5 @@ trait IntIntMapNode extends MapNode[Int,Int]
 }
 
 trait BVNode extends ASTNode {
-  override val values: List[Long]
   override val nodeType = Types.BitVec64
 }
