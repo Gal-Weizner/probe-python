@@ -21,6 +21,7 @@ abstract class ListCompVocabMaker(inputListType: Types, outputListType: Types, s
 
   var listIter: Iterator[ASTNode] = _
   var mapVocab: VocabFactory = _
+  var predicates: Predicates = _
 
   var costLevel: Int = _
   var enumerator: Iterator[ASTNode] = _
@@ -44,6 +45,7 @@ abstract class ListCompVocabMaker(inputListType: Types, outputListType: Types, s
 
     this.childHeight = height - 1
     this.varName = "var"
+    this.predicates = predicates_t
 
     // Make sure the name is unique
     // TODO We need a nicer way to generate this
@@ -59,7 +61,7 @@ abstract class ListCompVocabMaker(inputListType: Types, outputListType: Types, s
         override val returnType: Types = Types.PyString
         override val nodeType: Class[_ <: ASTNode] = classOf[PyStringVariable]
         override val head: String = ""
-        override val predicates: Predicates = predicates_t
+        //override val predicates: Predicates = predicates_t
 
         override def apply(children: List[ASTNode], predicates: Predicates): ASTNode =
           new PyStringVariable(varName, predicates)
@@ -70,7 +72,7 @@ abstract class ListCompVocabMaker(inputListType: Types, outputListType: Types, s
         override val returnType: Types = Types.PyInt
         override val nodeType: Class[_ <: ASTNode] = classOf[PyIntVariable]
         override val head: String = ""
-        override val predicates: Predicates = predicates_t
+        //override val predicates: Predicates = predicates_t
 
         override def apply(children: List[ASTNode], predicates: Predicates): ASTNode =
           new PyIntVariable(varName, predicates)
@@ -100,6 +102,7 @@ abstract class ListCompVocabMaker(inputListType: Types, outputListType: Types, s
       .filter(n => n.nodeType.equals(Types.listOf(this.inputListType))).iterator
     this.varName = "var"
     this.miniBank = miniBank
+    this.predicates = predicates_t
     // Make sure the name is unique
     // TODO We need a nicer way to generate this
 
@@ -115,7 +118,7 @@ abstract class ListCompVocabMaker(inputListType: Types, outputListType: Types, s
         override val returnType: Types = Types.PyString
         override val nodeType: Class[_ <: ASTNode] = classOf[PyStringVariable]
         override val head: String = ""
-        override val predicates: Predicates = predicates_t
+        //override val predicates: Predicates = predicates_t
 
         override def apply(children: List[ASTNode], predicates: Predicates): ASTNode =
           new PyStringVariable(varName, predicates)
@@ -126,7 +129,7 @@ abstract class ListCompVocabMaker(inputListType: Types, outputListType: Types, s
         override val returnType: Types = Types.PyInt
         override val nodeType: Class[_ <: ASTNode] = classOf[PyIntVariable]
         override val head: String = ""
-        override val predicates: Predicates = predicates_t
+        //override val predicates: Predicates = predicates_t
 
         override def apply(children: List[ASTNode], predicates: Predicates): ASTNode =
           new PyIntVariable(varName, predicates)

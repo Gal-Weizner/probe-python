@@ -21,6 +21,7 @@ abstract class MapCompVocabMaker(iterableType: Types, valueType: Types,
 
   var listIter: Iterator[ASTNode] = _
   var mapVocab: VocabFactory = _
+  var predicates: Predicates = _
 
   var enumerator: Iterator[ASTNode] = _
   var currList: ASTNode = _
@@ -51,11 +52,12 @@ abstract class MapCompVocabMaker(iterableType: Types, valueType: Types,
     this.listIter = progs.filter(n => n.nodeType.equals(this.iterableType)).iterator
     this.childHeight = height - 1
     this.varName = "var"
-
+    this.predicates = predicates_t
     // Make sure the name is unique
     // TODO We need a nicer way to generate this
     while (predicates.predicates.take(predicates.num_of_examples).head.
       asInstanceOf[ExamplePredicate].context.contains(this.varName)) this.varName = "_" + this.varName
+
 
     // Filter the vocabs for the map function
     // TODO There has to be a more efficient way
@@ -66,7 +68,7 @@ abstract class MapCompVocabMaker(iterableType: Types, valueType: Types,
         override val returnType: Types = Types.PyString
         override val nodeType: Class[_ <: ASTNode] = classOf[PyStringVariable]
         override val head: String = ""
-        override val predicates: Predicates = predicates_t
+        //override val predicates: Predicates = predicates_t
         override def apply(children: List[ASTNode], predicates: Predicates): ASTNode =
           new PyStringVariable(varName, predicates)
       }
@@ -76,7 +78,7 @@ abstract class MapCompVocabMaker(iterableType: Types, valueType: Types,
         override val returnType: Types = Types.PyString
         override val nodeType: Class[_ <: ASTNode] = classOf[PyStringVariable]
         override val head: String = ""
-        override val predicates: Predicates = predicates_t
+        //override val predicates: Predicates = predicates_t
         override def apply(children: List[ASTNode], predicates: Predicates): ASTNode =
           new PyStringVariable(varName, predicates)
       }
@@ -86,7 +88,7 @@ abstract class MapCompVocabMaker(iterableType: Types, valueType: Types,
         override val returnType: Types = Types.PyInt
         override val nodeType: Class[_ <: ASTNode] = classOf[PyIntVariable]
         override val head: String = ""
-        override val predicates: Predicates = predicates_t
+        //override val predicates: Predicates = predicates_t
         override def apply(children: List[ASTNode], predicates: Predicates): ASTNode =
           new PyIntVariable(varName, predicates)
       }
@@ -120,6 +122,8 @@ abstract class MapCompVocabMaker(iterableType: Types, valueType: Types,
      this.costLevel = costLevel - 1
      this.varName = "var"
      this.varBank = varBank
+     this.predicates = predicates_t
+
     // Make sure the name is unique
     // TODO We need a nicer way to generate this
      while (predicates.predicates.take(predicates.num_of_examples).head.
@@ -134,7 +138,7 @@ abstract class MapCompVocabMaker(iterableType: Types, valueType: Types,
         override val returnType: Types = Types.PyString
         override val nodeType: Class[_ <: ASTNode] = classOf[PyStringVariable]
         override val head: String = ""
-        override val predicates: Predicates = predicates_t
+        //override val predicates: Predicates = predicates_t
 
         override def apply(children: List[ASTNode], predicates: Predicates): ASTNode =
           new PyStringVariable(varName, predicates)
@@ -145,7 +149,7 @@ abstract class MapCompVocabMaker(iterableType: Types, valueType: Types,
         override val returnType: Types = Types.PyString
         override val nodeType: Class[_ <: ASTNode] = classOf[PyStringVariable]
         override val head: String = ""
-        override val predicates: Predicates = predicates_t
+        //override val predicates: Predicates = predicates_t
 
         override def apply(children: List[ASTNode], predicates: Predicates): ASTNode =
           new PyStringVariable(varName,  predicates)
@@ -156,7 +160,7 @@ abstract class MapCompVocabMaker(iterableType: Types, valueType: Types,
         override val returnType: Types = Types.PyInt
         override val nodeType: Class[_ <: ASTNode] = classOf[PyIntVariable]
         override val head: String = ""
-        override val predicates: Predicates = predicates_t
+        //override val predicates: Predicates = predicates_t
 
         override def apply(children: List[ASTNode], predicates: Predicates): ASTNode =
           new PyIntVariable(varName, predicates)
@@ -270,18 +274,6 @@ abstract class MapCompVocabMaker(iterableType: Types, valueType: Types,
         {
           predicate.updatePredicate(varName, elem)
         }
-//        val example_predicates = for(predicate <- this.predicates.getExamplePredicates() ;
-//                                     value <-this.currList.values.take(this.predicates.num_of_examples) ;
-//                                     value <-value.toString.toList) yield
-//          {
-//            predicate.updatePredicate(this.varName, value)
-//          }
-//        val example_predicates = for (predicate <- this.predicates.getExamplePredicates();
-//                                      value <- this.currList.values.take(this.predicates.num_of_examples);
-//                                      value <- value.toString.toList) yield
-//            {
-//              predicate.updatePredicate(this.varName, value)
-//            }
         val new_predicates = example_predicates ++ this.predicates.getNonExamplePredicates()
         val newPredicatesClass = new Predicates(new_predicates, example_predicates.length)
         val oeValuesManager = new InputsValuesManager()
@@ -300,7 +292,6 @@ abstract class MapCompVocabMaker(iterableType: Types, valueType: Types,
           //  pass the updated bank as parameter to the new enumerator object
           this.mapVocab.predicates.predicates = new_predicates
           this.mapVocab.predicates.num_of_examples = example_predicates.length
-
             new PyProbEnumerator(this.mapVocab, oeValuesManager, newPredicatesClass,
              true, nestedCost, mainBank, varBank)
         }
@@ -319,7 +310,7 @@ abstract class FilteredMapVocabMaker(keyType: Types, valueType: Types,
 
   var mapIter: Iterator[ASTNode] = _
   var filterVocab: VocabFactory = _
-  var contexts: List[Map[String, Any]] = _
+  var predicates: Predicates = _
 
   var enumerator: Iterator[ASTNode] = _
   var currMap: ASTNode = _
@@ -348,11 +339,12 @@ abstract class FilteredMapVocabMaker(keyType: Types, valueType: Types,
     this.mapIter = progs.filter(n => n.isInstanceOf[VariableNode[_]] && n.nodeType.equals(Types.Map(keyType, valueType))).iterator
     this.childHeight = height - 1
     this.keyName = "key"
-    this.contexts = contexts
+    this.predicates = predicates_t
 
     // Make sure the name is unique
     // TODO We need a nicer way to generate this
-    while (contexts.head.contains(this.keyName)) this.keyName = "_" + this.keyName
+    while (predicates.predicates.take(predicates.num_of_examples).head.
+      asInstanceOf[ExamplePredicate].context.contains(this.keyName)) this.keyName = "_" + this.keyName
 
     // Filter the vocabs for the map function
     // TODO There has to be a more efficient way
@@ -363,7 +355,7 @@ abstract class FilteredMapVocabMaker(keyType: Types, valueType: Types,
         override val returnType: Types = Types.PyString
         override val nodeType: Class[_ <: ASTNode] = classOf[PyStringVariable]
         override val head: String = ""
-        override val predicates: Predicates = predicates_t
+        //override val predicates: Predicates = predicates_t
 
         override def apply(children: List[ASTNode], predicates: Predicates): ASTNode =
           new PyStringVariable(keyName, predicates)
@@ -374,7 +366,7 @@ abstract class FilteredMapVocabMaker(keyType: Types, valueType: Types,
         override val returnType: Types = Types.PyInt
         override val nodeType: Class[_ <: ASTNode] = classOf[PyIntVariable]
         override val head: String = ""
-        override val predicates: Predicates = predicates_t
+        //override val predicates: Predicates = predicates_t
 
         override def apply(children: List[ASTNode], predicates: Predicates): ASTNode =
           new PyIntVariable(keyName, predicates)
@@ -403,7 +395,7 @@ abstract class FilteredMapVocabMaker(keyType: Types, valueType: Types,
       filter(n => n.isInstanceOf[VariableNode[_]] && n.nodeType.equals(Types.Map(keyType, valueType))).iterator
 
     this.keyName = "key"
-    this.contexts = contexts
+    this.predicates = predicates_t
     this.costLevel = costLevel - 1
     this.varBank = varBank
 
@@ -420,7 +412,7 @@ abstract class FilteredMapVocabMaker(keyType: Types, valueType: Types,
         override val returnType: Types = Types.PyString
         override val nodeType: Class[_ <: ASTNode] = classOf[PyStringVariable]
         override val head: String = ""
-        override val predicates: Predicates = predicates_t
+        //override val predicates: Predicates = predicates_t
 
         override def apply(children: List[ASTNode], predicates: Predicates): ASTNode =
           new PyStringVariable(keyName, predicates)
@@ -431,7 +423,7 @@ abstract class FilteredMapVocabMaker(keyType: Types, valueType: Types,
         override val returnType: Types = Types.PyInt
         override val nodeType: Class[_ <: ASTNode] = classOf[PyIntVariable]
         override val head: String = ""
-        override val predicates: Predicates = predicates_t
+        //override val predicates: Predicates = predicates_t
 
         override def apply(children: List[ASTNode], predicates: Predicates): ASTNode =
           new PyIntVariable(keyName, predicates)
@@ -553,8 +545,6 @@ abstract class FilteredMapVocabMaker(keyType: Types, valueType: Types,
 
           val nestedCost = if (this.varBank.contains((this.nodeType, this.currMap)))
             this.varBank((this.nodeType, this.currMap)).keys.last else 0
-          this.filterVocab.predicates.predicates = new_predicates
-          this.filterVocab.predicates.num_of_examples = example_predicates.length
           new PyProbEnumerator( this.filterVocab, oeValuesManager, newPredicatesClass,true, nestedCost, mainBank,
             varBank)
         }

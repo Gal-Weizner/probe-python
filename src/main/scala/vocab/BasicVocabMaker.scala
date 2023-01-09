@@ -13,7 +13,8 @@ trait BasicVocabMaker extends VocabMaker with Iterator[ASTNode] {
   val returnType: Types
   var childIterator: Iterator[List[ASTNode]] = _
   var size_log = new FileOutputStream("output.txt", true)
-  override val predicates: Predicates
+  //override val predicates: Predicates
+  var predicates: Predicates = _
 
   override def hasNext: Boolean = childIterator != null && childIterator.hasNext
   def apply(children: List[ASTNode], predicates: Predicates): ASTNode
@@ -27,8 +28,8 @@ trait BasicVocabMaker extends VocabMaker with Iterator[ASTNode] {
     || nodeType == classOf[BVLiteral] || nodeType == classOf[BVVariable])
     ProbUpdate.priors(nodeType, Some(head)) else ProbUpdate.priors(nodeType, None)
 
-  override def init(programs: List[ASTNode], predicates: Predicates, vocabFactory: VocabFactory, height: Int) : Iterator[ASTNode] = {
-    //this.predicates = predicates
+  override def init(programs: List[ASTNode], predicates_t: Predicates, vocabFactory: VocabFactory, height: Int) : Iterator[ASTNode] = {
+    this.predicates = predicates_t
 
     this.childIterator = if (this.arity == 0) {
       // No children needed, but we still return 1 value
@@ -49,7 +50,7 @@ trait BasicVocabMaker extends VocabMaker with Iterator[ASTNode] {
                   miniBank: mutable.Map[(Class[_], ASTNode), mutable.Map[Int, mutable.ArrayBuffer[ASTNode]]],
                   mini: mutable.Map[Int, mutable.ArrayBuffer[ASTNode]]) : Iterator[ASTNode] = {
 
-     //this.predicates = predicates
+     this.predicates = predicates
      this.childIterator = if (this.arity == 0 && this.rootCost == costLevel) {
        // No children needed, but we still return 1 value
        Iterator.single(Nil)

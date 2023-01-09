@@ -25,7 +25,7 @@ trait VocabMaker {
   val nodeType: Class[_ <: ASTNode]
   val head: String
   val returnType: Types
-  val predicates: Predicates
+  //val predicates: Predicates
 
   def apply(children: List[ASTNode], predicates: Predicates): ASTNode
   def canMake(children: List[ASTNode]): Boolean = children.length == arity && children.zip(childTypes).forall(pair => pair._1.nodeType == pair._2)

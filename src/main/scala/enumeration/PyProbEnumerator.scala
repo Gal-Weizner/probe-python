@@ -35,7 +35,6 @@ class PyProbEnumerator(val vocab: VocabFactory,
     nextProgram = None
     res
   }
-
   var costLevel = initCost
   var currIterator: Iterator[VocabMaker] = _
   var currLevelPrograms: mutable.ArrayBuffer[ASTNode] = mutable.ArrayBuffer()
