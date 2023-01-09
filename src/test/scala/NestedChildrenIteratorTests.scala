@@ -1,6 +1,6 @@
 import ast.Types.String
 import ast.{ASTNode, IntAddition, IntLiteral, IntNode, IntVariable, PyIntLiteral, PyStringLiteral, PyStringVariable, Types}
-import enumeration.{ChildrenIterator, Contexts, NestedChildrenIterator, ProbChildrenIterator}
+import enumeration.{ChildrenIterator, NestedChildrenIterator, ProbChildrenIterator}
 import org.junit.Test
 import org.scalatestplus.junit.JUnitSuite
 import org.junit.Assert._

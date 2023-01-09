@@ -7,7 +7,7 @@ import sygus.{Predicate, Predicates}
 
 import scala.collection.mutable
 
-class VocabFactory(val leavesMakers: List[VocabMaker], val nodeMakers: List[VocabMaker], val predicates: Predicates) {
+class VocabFactory(val leavesMakers: List[VocabMaker], val nodeMakers: List[VocabMaker]) {
   def leaves(): Iterator[VocabMaker] = leavesMakers.iterator
   def nonLeaves(): Iterator[VocabMaker] = nodeMakers.iterator
 }
@@ -15,7 +15,7 @@ class VocabFactory(val leavesMakers: List[VocabMaker], val nodeMakers: List[Voca
 object VocabFactory {
   def apply(vocabMakers: Seq[VocabMaker], predicates: Predicates): VocabFactory = {
     val (leavesMakers, nodeMakers) = vocabMakers.toList.partition(m => m.arity == 0)
-    new VocabFactory(leavesMakers, nodeMakers, predicates)
+    new VocabFactory(leavesMakers, nodeMakers)
   }
 }
 

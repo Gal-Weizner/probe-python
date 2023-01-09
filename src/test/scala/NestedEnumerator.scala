@@ -1,4 +1,4 @@
-import enumeration.{Contexts, InputsValuesManager, ProbUpdate}
+import enumeration.{InputsValuesManager, ProbUpdate}
 import org.junit.Test
 import org.scalatestplus.junit.JUnitSuite
 import org.junit.Assert._

@@ -1,6 +1,5 @@
 package ast
 import sygus.Predicates
-import enumeration.Contexts
 
 abstract class LiteralNode[T](numExamples: Int) extends ASTNode{
   assert(numExamples > 0)

@@ -3,7 +3,7 @@ package vocab
 import java.io.FileOutputStream
 import ast.Types.Types
 import ast._
-import enumeration.{Contexts, InputsValuesManager, PyEnumerator, PyProbEnumerator}
+import enumeration.{InputsValuesManager, PyEnumerator, PyProbEnumerator}
 import sygus.{Predicates, ExamplePredicate}
 import trace.DebugPrints
 
@@ -21,7 +21,7 @@ abstract class MapCompVocabMaker(iterableType: Types, valueType: Types,
 
   var listIter: Iterator[ASTNode] = _
   var mapVocab: VocabFactory = _
-  var predicates: Predicates = _
+  //var predicates: Predicates = _
 
   var enumerator: Iterator[ASTNode] = _
   var currList: ASTNode = _
@@ -52,10 +52,10 @@ abstract class MapCompVocabMaker(iterableType: Types, valueType: Types,
     this.listIter = progs.filter(n => n.nodeType.equals(this.iterableType)).iterator
     this.childHeight = height - 1
     this.varName = "var"
-    this.predicates = predicates_t
+    //this.predicates = predicates_t
     // Make sure the name is unique
     // TODO We need a nicer way to generate this
-    while (predicates.predicates.take(predicates.num_of_examples).head.
+    while (predicates_t.predicates.take(predicates_t.num_of_examples).head.
       asInstanceOf[ExamplePredicate].context.contains(this.varName)) this.varName = "_" + this.varName
 
 
@@ -100,7 +100,7 @@ abstract class MapCompVocabMaker(iterableType: Types, valueType: Types,
     val vocabs = newVarVocab ::
       vocabFactory.leavesMakers :::
       vocabFactory.nodeMakers.filter(c => c.isInstanceOf[BasicVocabMaker])
-    this.mapVocab = VocabFactory.apply(vocabs, predicates)
+    this.mapVocab = VocabFactory.apply(vocabs, predicates_t)
     this.nextList()
     this
   }
@@ -122,11 +122,11 @@ abstract class MapCompVocabMaker(iterableType: Types, valueType: Types,
      this.costLevel = costLevel - 1
      this.varName = "var"
      this.varBank = varBank
-     this.predicates = predicates_t
+     //this.predicates = predicates_t
 
     // Make sure the name is unique
     // TODO We need a nicer way to generate this
-     while (predicates.predicates.take(predicates.num_of_examples).head.
+     while (predicates_t.predicates.take(predicates_t.num_of_examples).head.
        asInstanceOf[ExamplePredicate].context.contains(this.varName)) this.varName = "_" + this.varName
 
     // Filter the vocabs for the map function
@@ -171,7 +171,7 @@ abstract class MapCompVocabMaker(iterableType: Types, valueType: Types,
     val vocabs = newVarVocab ::
       vocabFactory.leavesMakers :::
       vocabFactory.nodeMakers.filter(c => c.isInstanceOf[BasicVocabMaker])
-    this.mapVocab = VocabFactory.apply(vocabs, predicates)
+    this.mapVocab = VocabFactory.apply(vocabs, predicates_t)
     this.nextList()
     this
   }
@@ -222,7 +222,7 @@ abstract class MapCompVocabMaker(iterableType: Types, valueType: Types,
         // next is a valid program
         val node = this.makeNode(
           this.currList,
-          new PyStringVariable(varName, predicates),
+          new PyStringVariable(varName, predicates_t),
           value)
         this.nextProg = Some(node)
       }
@@ -253,7 +253,7 @@ abstract class MapCompVocabMaker(iterableType: Types, valueType: Types,
         // next is a valid program
         val node = this.makeNode(
           this.currList,
-          new PyStringVariable(varName, predicates),
+          new PyStringVariable(varName, predicates_t),
           value)
         this.nextProg = Some(node)
       }
@@ -269,12 +269,12 @@ abstract class MapCompVocabMaker(iterableType: Types, valueType: Types,
 
       if (lst.values.head.asInstanceOf[String].nonEmpty) {
         this.currList = lst
-        val example_predicates = for ((predicate, listVal) <- this.predicates.getExamplePredicates().zip(lst.values.take(this.predicates.num_of_examples));
+        val example_predicates = for ((predicate, listVal) <- predicates_t.getExamplePredicates().zip(lst.values.take(predicates_t.num_of_examples));
              elem <- listVal.toString.toList) yield
         {
           predicate.updatePredicate(varName, elem)
         }
-        val new_predicates = example_predicates ++ this.predicates.getNonExamplePredicates()
+        val new_predicates = example_predicates ++ predicates_t.getNonExamplePredicates()
         val newPredicatesClass = new Predicates(new_predicates, example_predicates.length)
         val oeValuesManager = new InputsValuesManager()
         this.enumerator = if (!size) {
@@ -290,8 +290,8 @@ abstract class MapCompVocabMaker(iterableType: Types, valueType: Types,
             this.varBank((this.nodeType, this.currList)).keys.last else 0
           // TODO: add the programs from the varBank to the main bank;
           //  pass the updated bank as parameter to the new enumerator object
-          this.mapVocab.predicates.predicates = new_predicates
-          this.mapVocab.predicates.num_of_examples = example_predicates.length
+//          this.mapVocab.predicates.predicates = new_predicates
+//          this.mapVocab.predicates.num_of_examples = example_predicates.length
             new PyProbEnumerator(this.mapVocab, oeValuesManager, newPredicatesClass,
              true, nestedCost, mainBank, varBank)
         }
@@ -310,7 +310,7 @@ abstract class FilteredMapVocabMaker(keyType: Types, valueType: Types,
 
   var mapIter: Iterator[ASTNode] = _
   var filterVocab: VocabFactory = _
-  var predicates: Predicates = _
+  //var predicates: Predicates = _
 
   var enumerator: Iterator[ASTNode] = _
   var currMap: ASTNode = _
@@ -339,11 +339,11 @@ abstract class FilteredMapVocabMaker(keyType: Types, valueType: Types,
     this.mapIter = progs.filter(n => n.isInstanceOf[VariableNode[_]] && n.nodeType.equals(Types.Map(keyType, valueType))).iterator
     this.childHeight = height - 1
     this.keyName = "key"
-    this.predicates = predicates_t
+    //this.predicates = predicates_t
 
     // Make sure the name is unique
     // TODO We need a nicer way to generate this
-    while (predicates.predicates.take(predicates.num_of_examples).head.
+    while (predicates_t.predicates.take(predicates_t.num_of_examples).head.
       asInstanceOf[ExamplePredicate].context.contains(this.keyName)) this.keyName = "_" + this.keyName
 
     // Filter the vocabs for the map function
@@ -378,7 +378,7 @@ abstract class FilteredMapVocabMaker(keyType: Types, valueType: Types,
       vocabFactory.leavesMakers :::
       vocabFactory.nodeMakers.filter(c => c.isInstanceOf[BasicVocabMaker])
 
-    this.filterVocab = VocabFactory.apply(vocabs, predicates)
+    this.filterVocab = VocabFactory.apply(vocabs, predicates_t)
     this.nextMap()
     this
   }
@@ -395,12 +395,12 @@ abstract class FilteredMapVocabMaker(keyType: Types, valueType: Types,
       filter(n => n.isInstanceOf[VariableNode[_]] && n.nodeType.equals(Types.Map(keyType, valueType))).iterator
 
     this.keyName = "key"
-    this.predicates = predicates_t
+   // this.predicates = predicates_t
     this.costLevel = costLevel - 1
     this.varBank = varBank
 
     // TODO We need a nicer way to generate this
-    while (predicates.predicates.take(predicates.num_of_examples).head.
+    while (predicates_t.predicates.take(predicates_t.num_of_examples).head.
       asInstanceOf[ExamplePredicate].context.contains(this.keyName)) this.keyName = "_" + this.keyName
 
     // Filter the vocabs for the map function
@@ -435,7 +435,7 @@ abstract class FilteredMapVocabMaker(keyType: Types, valueType: Types,
       vocabFactory.leavesMakers :::
       vocabFactory.nodeMakers.filter(_.isInstanceOf[BasicVocabMaker])
 
-    this.filterVocab = VocabFactory.apply(vocabs, predicates)
+    this.filterVocab = VocabFactory.apply(vocabs, predicates_t)
     this.nextMap()
     this
   }
@@ -527,11 +527,11 @@ abstract class FilteredMapVocabMaker(keyType: Types, valueType: Types,
       val map = mapIter.next()
       if (map.values.head.asInstanceOf[Map[_,_]].nonEmpty) {
         this.currMap = map
-        val example_predicates = for ((predicate, listVal) <- this.predicates.getExamplePredicates().zip(currMap.values.take(this.predicates.num_of_examples));
+        val example_predicates = for ((predicate, listVal) <- predicates_t.getExamplePredicates().zip(currMap.values.take(predicates_t.num_of_examples));
                                       elem <- listVal.toString.toList) yield {
           predicate.updatePredicate(keyName, elem)
         }
-        val new_predicates = example_predicates ++ this.predicates.getNonExamplePredicates()
+        val new_predicates = example_predicates ++ predicates_t.getNonExamplePredicates()
         val newPredicatesClass = new Predicates(new_predicates, example_predicates.length)
         val oeValuesManager = new InputsValuesManager()
         this.enumerator = if (!size) {
@@ -545,7 +545,7 @@ abstract class FilteredMapVocabMaker(keyType: Types, valueType: Types,
 
           val nestedCost = if (this.varBank.contains((this.nodeType, this.currMap)))
             this.varBank((this.nodeType, this.currMap)).keys.last else 0
-          new PyProbEnumerator( this.filterVocab, oeValuesManager, newPredicatesClass,true, nestedCost, mainBank,
+          new PyProbEnumerator(this.filterVocab, oeValuesManager, newPredicatesClass,true, nestedCost, mainBank,
             varBank)
         }
         done = true

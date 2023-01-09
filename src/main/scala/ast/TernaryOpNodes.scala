@@ -1,6 +1,5 @@
 package ast
 
-import enumeration.Contexts
 import org.apache.commons.lang3.StringUtils
 import trace.DebugPrints.eprintln
 import sygus.Predicates

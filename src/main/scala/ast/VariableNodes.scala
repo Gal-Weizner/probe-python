@@ -1,7 +1,6 @@
 package ast
 
 import ast.Types.Types
-import enumeration.Contexts
 import sygus.Predicates
 
 abstract class VariableNode[T](predicates: Predicates) extends ASTNode

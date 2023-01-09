@@ -3,7 +3,7 @@ package vocab
 import java.io.FileOutputStream
 import ast.Types.Types
 import ast._
-import enumeration.{Contexts, InputsValuesManager, PyEnumerator, PyProbEnumerator}
+import enumeration.{InputsValuesManager, PyEnumerator, PyProbEnumerator}
 import sygus.{ExamplePredicate, Predicates}
 import trace.DebugPrints
 
@@ -255,8 +255,8 @@ abstract class ListCompVocabMaker(inputListType: Types, outputListType: Types, s
           val nestedCost = if (this.miniBank.contains((this.nodeType, this.currList)))
             this.miniBank((this.nodeType, this.currList)).keys.last else 0
 
-          this.mapVocab.predicates.predicates = new_predicates
-          this.mapVocab.predicates.num_of_examples = example_predicates.length
+//          this.mapVocab.predicates.predicates = new_predicates
+//          this.mapVocab.predicates.num_of_examples = example_predicates.length
           new PyProbEnumerator(this.mapVocab, oeValuesManager, newPredicatesClass, true,
             nestedCost, mainBank, miniBank)
         }

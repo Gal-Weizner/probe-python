@@ -553,7 +553,7 @@ object PythonPBETask
           override val nodeType: Class[_ <: ASTNode] = classOf[StringStringMapCompNode]
           override def makeNode(lst: ASTNode, key: ASTNode, value: ASTNode): ASTNode =
             new StringStringMapCompNode(lst.asInstanceOf[PyStringNode], key.asInstanceOf[PyStringNode], value.asInstanceOf[PyStringNode],
-              this.varName, predicates)
+              this.varName, predicates_t)
 
           override val returnType: Types = Types.Unknown
           override val childTypes: List[Types] = List(Types.Unknown)
@@ -564,7 +564,7 @@ object PythonPBETask
           override val nodeType: Class[_ <: ASTNode] = classOf[StringIntMapCompNode]
           override def makeNode(lst: ASTNode, key: ASTNode, value: ASTNode): ASTNode =
             new StringIntMapCompNode(lst.asInstanceOf[PyStringNode], key.asInstanceOf[PyStringNode], value.asInstanceOf[PyIntNode],
-              this.varName, predicates)
+              this.varName, predicates_t)
 
           override val returnType: Types = Types.Unknown
           override val childTypes: List[Types] = List(Types.Unknown)
@@ -574,7 +574,7 @@ object PythonPBETask
         new FilteredMapVocabMaker(Types.PyString, Types.PyString, size, predicates_t) {
           override val nodeType: Class[_ <: ASTNode] = classOf[StringStringFilteredMapNode]
           override def makeNode(map: ASTNode, filter: PyBoolNode) : ASTNode =
-            new StringStringFilteredMapNode(map.asInstanceOf[StringStringMapNode], filter, this.keyName, predicates)
+            new StringStringFilteredMapNode(map.asInstanceOf[StringStringMapNode], filter, this.keyName, predicates_t)
 
           override val returnType: Types = Types.Unknown
           override val childTypes: List[Types] = List(Types.Unknown)
@@ -584,7 +584,7 @@ object PythonPBETask
         new FilteredMapVocabMaker(Types.PyString, Types.PyInt, size, predicates_t) {
           override val nodeType: Class[_ <: ASTNode] = classOf[StringIntFilteredMapNode]
           override def makeNode(map: ASTNode, filter: PyBoolNode) : ASTNode =
-            new StringIntFilteredMapNode(map.asInstanceOf[MapNode[String,Int]], filter, this.keyName, predicates)
+            new StringIntFilteredMapNode(map.asInstanceOf[MapNode[String,Int]], filter, this.keyName, predicates_t)
           override val returnType: Types = Types.StringList
           override val childTypes: List[Types] = List(Types.Unknown)
           override val head: String = ""
