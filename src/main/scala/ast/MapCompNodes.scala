@@ -19,43 +19,18 @@ trait MapCompNode[K,V] extends MapNode[K,V]
   override val valType: Types = value.nodeType
 
   override def computeOnContext(ctx: Map[String, Any]): Option[Any] = {
-    val value_t = predicates.getExampleValue(value.values, ctx)
-    var entry = key.computeOnContext(ctx).get
-//    entry = (entry, entry)
-    val entries: Iterable[(K, V)] = key.values.zip(value.values).asInstanceOf[Iterable[(K,V)]]
-    val res = list.values.head match {
-      case _: String => (value_t, entry)//splitByIterable(list.values.asInstanceOf[List[String]].map(new WrappedString(_)), entries).map(_.toMap)
-//      case _: String => splitByIterable(list.values.asInstanceOf[List[String]].map(new WrappedString(_)), entries).map(_.toMap)
-      case _: Iterable[_] => splitByIterable(list.values.asInstanceOf[List[Iterable[_]]], entries).map(_.toMap)
-      //        case _ => list.computeOnContext(ctx)
-      //          .map(i => entries.slice(
-      //            i * entries.size / list.values.length,
-      //            (i + 1) * entries.size / list.values.length))
-      //          .map(_.toMap)
-      //          .toList
-      //    }
-    }
+
+    val (start, length) = predicates.getCurrentIterableRange(ctx,list.values.head match {
+      case _: String => list.values.take(list.predicates.num_of_examples).asInstanceOf[List[String]].map(new WrappedString(_))
+      case _: Iterable[_] => list.values.take(list.predicates.num_of_examples).asInstanceOf[List[Iterable[_]]]
+      case _ => ???
+    })
+
+    val value_t = value.values.slice(start, start + length)
+    val key_t = key.values.slice(start, start + length)
+    val res = key_t.zip(value_t).toMap
     Some(res)
   }
-//  override val values: List[Map[K,V]] = {
-//    if (list.values.isEmpty) {
-//      Nil
-//    } else {
-//      val entries: Iterable[(K, V)] = key.values.zip(value.values).asInstanceOf[Iterable[(K,V)]]
-//
-//      list.values.head match {
-//        case _: String => splitByIterable(list.values.asInstanceOf[List[String]].map(new WrappedString(_)), entries).map(_.toMap)
-//        case _: Iterable[_] => splitByIterable(list.values.asInstanceOf[List[Iterable[_]]], entries).map(_.toMap)
-//        case _ => list.values
-//          .indices
-//          .map(i => entries.slice(
-//            i * entries.size / list.values.length,
-//            (i+1) * entries.size / list.values.length))
-//          .map(_.toMap)
-//          .toList
-//      }
-//    }
-//  }
 
   override val height: Int = 1 + Math.max(list.height, value.height)
   override val terms: Int = 1 + list.terms + value.terms

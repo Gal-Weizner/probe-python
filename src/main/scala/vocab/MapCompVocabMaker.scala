@@ -222,7 +222,7 @@ abstract class MapCompVocabMaker(iterableType: Types, valueType: Types,
         // next is a valid program
         val node = this.makeNode(
           this.currList,
-          new PyStringVariable(varName, predicates_t),
+          new PyStringVariable(varName, this.enumerator.asInstanceOf[PyProbEnumerator].predicates_t),
           value)
         this.nextProg = Some(node)
       }
@@ -253,7 +253,7 @@ abstract class MapCompVocabMaker(iterableType: Types, valueType: Types,
         // next is a valid program
         val node = this.makeNode(
           this.currList,
-          new PyStringVariable(varName, predicates_t),
+          new PyStringVariable(varName, this.enumerator.asInstanceOf[PyProbEnumerator].predicates_t),
           value)
         this.nextProg = Some(node)
       }

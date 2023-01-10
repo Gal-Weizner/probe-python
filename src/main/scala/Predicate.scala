@@ -11,6 +11,14 @@ trait Predicate {
 
 class Predicates(var predicates: List[Predicate], var num_of_examples: Int)
 {
+
+  def getCurrentIterableRange(ctx: Map[String, Any], list_values: List[Iterable[_]]): (Int, Int) = {
+    var start = 0
+    for ((pred,l) <- getExamplePredicates().zip(list_values))
+        if (pred.context == ctx) return (start, l.size)
+        else start += l.size
+    (-1,-1)
+  }
   def getExampleValue(values: List[Any], ctx: Map[String, Any]): Any =
   {
     val res = predicates.zipWithIndex.find{case (p,_) => p.isInstanceOf[ExamplePredicate] && p.asInstanceOf[ExamplePredicate].context == ctx}

@@ -84,7 +84,7 @@ abstract class ListCompVocabMaker(inputListType: Types, outputListType: Types, s
       vocabFactory.leavesMakers :::
       vocabFactory.nodeMakers.filter(c => c.isInstanceOf[BasicVocabMaker])
 
-    this.mapVocab = VocabFactory.apply(vocabs, predicates)
+    this.mapVocab = VocabFactory(vocabs, predicates)
     this.nextList()
     this
   }
