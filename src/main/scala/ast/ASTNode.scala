@@ -30,6 +30,7 @@ trait ASTNode {
     children.foreach(_.renewCost)
     _cost = Some(ProbUpdate.getRootPrior(this) + children.map(c => c.cost).sum)
   }
+  def updateValues(predicates: Predicates): ASTNode
 }
 
 trait StringNode extends ASTNode {

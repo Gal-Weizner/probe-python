@@ -11,8 +11,8 @@ trait QuaternaryOpNode[T] extends ASTNode
   val arg3: ASTNode
   override def computeOnContext(ctx: Map[String, Any]): Option[Any] =
   {
-    doOp(predicates.getExampleValue(arg0.values, ctx),predicates.getExampleValue(arg1.values, ctx),
-      predicates.getExampleValue(arg2.values, ctx), predicates.getExampleValue(arg3.values, ctx))
+    doOp(arg0.predicates.getExampleValue(arg0.values, ctx),arg1.predicates.getExampleValue(arg1.values, ctx),
+      arg2.predicates.getExampleValue(arg2.values, ctx), arg3.predicates.getExampleValue(arg3.values, ctx))
   }
 //  lazy val values: List[T] = arg0.values
 //    .zip(arg1.values)
@@ -44,6 +44,7 @@ trait QuaternaryOpNode[T] extends ASTNode
   override lazy val usesVariables: Boolean =
     arg0.usesVariables || arg1.usesVariables ||
       arg2.usesVariables || arg3.usesVariables
+  override def updateValues(predicates: Predicates) = null
 
 
 }

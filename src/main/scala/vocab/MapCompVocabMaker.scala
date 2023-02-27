@@ -100,7 +100,7 @@ abstract class MapCompVocabMaker(iterableType: Types, valueType: Types,
     val vocabs = newVarVocab ::
       vocabFactory.leavesMakers :::
       vocabFactory.nodeMakers.filter(c => c.isInstanceOf[BasicVocabMaker])
-    this.mapVocab = VocabFactory.apply(vocabs, predicates_t)
+    this.mapVocab = VocabFactory(vocabs, predicates_t)
     this.nextList()
     this
   }
@@ -171,7 +171,7 @@ abstract class MapCompVocabMaker(iterableType: Types, valueType: Types,
     val vocabs = newVarVocab ::
       vocabFactory.leavesMakers :::
       vocabFactory.nodeMakers.filter(c => c.isInstanceOf[BasicVocabMaker])
-    this.mapVocab = VocabFactory.apply(vocabs, predicates_t)
+    this.mapVocab = VocabFactory(vocabs, predicates_t)
     this.nextList()
     this
   }
@@ -270,9 +270,8 @@ abstract class MapCompVocabMaker(iterableType: Types, valueType: Types,
       if (lst.values.head.asInstanceOf[String].nonEmpty) {
         this.currList = lst
         val example_predicates = for ((predicate, listVal) <- predicates_t.getExamplePredicates().zip(lst.values.take(predicates_t.num_of_examples));
-             elem <- listVal.toString.toList) yield
-        {
-          predicate.updatePredicate(varName, elem)
+            elem <- listVal.toString.toList) yield {
+          predicate.updatePredicate(varName, elem.toString)
         }
         val new_predicates = example_predicates ++ predicates_t.getNonExamplePredicates()
         val newPredicatesClass = new Predicates(new_predicates, example_predicates.length)
@@ -378,7 +377,7 @@ abstract class FilteredMapVocabMaker(keyType: Types, valueType: Types,
       vocabFactory.leavesMakers :::
       vocabFactory.nodeMakers.filter(c => c.isInstanceOf[BasicVocabMaker])
 
-    this.filterVocab = VocabFactory.apply(vocabs, predicates_t)
+    this.filterVocab = VocabFactory(vocabs, predicates_t)
     this.nextMap()
     this
   }
@@ -435,7 +434,7 @@ abstract class FilteredMapVocabMaker(keyType: Types, valueType: Types,
       vocabFactory.leavesMakers :::
       vocabFactory.nodeMakers.filter(_.isInstanceOf[BasicVocabMaker])
 
-    this.filterVocab = VocabFactory.apply(vocabs, predicates_t)
+    this.filterVocab = VocabFactory(vocabs, predicates_t)
     this.nextMap()
     this
   }
@@ -529,7 +528,7 @@ abstract class FilteredMapVocabMaker(keyType: Types, valueType: Types,
         this.currMap = map
         val example_predicates = for ((predicate, listVal) <- predicates_t.getExamplePredicates().zip(currMap.values.take(predicates_t.num_of_examples));
                                       elem <- listVal.toString.toList) yield {
-          predicate.updatePredicate(keyName, elem)
+          predicate.updatePredicate(keyName, elem.toString)
         }
         val new_predicates = example_predicates ++ predicates_t.getNonExamplePredicates()
         val newPredicatesClass = new Predicates(new_predicates, example_predicates.length)

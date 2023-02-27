@@ -63,7 +63,7 @@ trait BasicVocabMaker extends VocabMaker with Iterator[ASTNode] {
      }
      else if (this.rootCost < costLevel && nested) { //TODO: add condition (arity != 0)
        val childrenCost = costLevel - this.rootCost
-       val children = new NestedChildrenIterator(this.childTypes, childrenCost, bank, mini)
+       val children = new NestedChildrenIterator(this.childTypes, childrenCost, bank, mini, predicates)
        children
      }
     else {

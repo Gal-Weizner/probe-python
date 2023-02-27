@@ -13,33 +13,45 @@ abstract class LiteralNode[T](numExamples: Int) extends ASTNode{
   override lazy val usesVariables: Boolean = false
 
 }
-case class StringLiteral(val value: String, numExamples: Int,
-                         val predicates: Predicates) extends LiteralNode[String](numExamples) with StringNode{
+case class StringLiteral(value: String, numExamples: Int,
+                         predicates: Predicates) extends LiteralNode[String](numExamples) with StringNode{
   override lazy val code: String = '"' + value + '"' //escape?
   override protected val parenless: Boolean = true
+  override def updateValues(predicates_t: Predicates) = this.copy(value = value, numExamples = predicates_t.num_of_examples,
+    predicates = predicates_t)
+
 }
 
-case class IntLiteral(val value: Int, numExamples: Int,
-                      val predicates: Predicates) extends LiteralNode[Int](numExamples) with IntNode{
+case class IntLiteral(value: Int, numExamples: Int,
+                      predicates: Predicates) extends LiteralNode[Int](numExamples) with IntNode{
   override lazy val code: String = value.toString
   override protected val parenless: Boolean = true
+  override def updateValues(predicates_t: Predicates) = this.copy(value = value, numExamples = predicates_t.num_of_examples,
+    predicates = predicates_t)
+
 }
 
-case class BoolLiteral(val value: Boolean, numExamples: Int,
-                       val predicates: Predicates) extends LiteralNode[Boolean](numExamples) with BoolNode {
+case class BoolLiteral(value: Boolean, numExamples: Int,
+                       predicates: Predicates) extends LiteralNode[Boolean](numExamples) with BoolNode {
   override lazy val code: String = value.toString
   override protected val parenless: Boolean = true
+  override def updateValues(predicates_t: Predicates) = this.copy(value = value, numExamples = predicates_t.num_of_examples,
+    predicates = predicates_t)
+
 }
 
-case class BVLiteral(val value: Long, numExamples: Int,
-                     val predicates: Predicates) extends LiteralNode[Long](numExamples) with BVNode {
+case class BVLiteral(value: Long, numExamples: Int,
+                     predicates: Predicates) extends LiteralNode[Long](numExamples) with BVNode {
   override lazy val code: String = f"#x$value%016x"
   override protected val parenless: Boolean = true
+  override def updateValues(predicates_t: Predicates) = this.copy(value = value, numExamples = predicates_t.num_of_examples,
+    predicates = predicates_t )
+
 
 }
 
-case class PyStringLiteral(val value: String, numExamples: Int,
-                           val predicates: Predicates) extends LiteralNode[String](numExamples) with PyStringNode
+case class PyStringLiteral(value: String, numExamples: Int,
+                           predicates: Predicates) extends LiteralNode[String](numExamples) with PyStringNode
 {
   override protected val parenless: Boolean = true
   override val code: String = '"' + value.flatMap(c => if (c.toInt >= 32 && c.toInt <= 127 && c != '\\' && c != '"') c.toString
@@ -56,20 +68,28 @@ case class PyStringLiteral(val value: String, numExamples: Int,
     case _ => "\\x" + c.toInt.toHexString
   }) + '"'
 
+//  override def updateValues(predicates_t: Predicates): PyStringLiteral = this.copy(value = value, numExamples = predicates_t.num_of_examples,
+//    predicates = predicates_t)
+  override def updateValues(predicates_t: Predicates) = this.copy(numExamples = predicates_t.num_of_examples, predicates = predicates_t)
+
 }
 
-case class PyIntLiteral(val value: Int, numExamples: Int,
-                        val predicates: Predicates) extends LiteralNode[Int](numExamples) with PyIntNode
+case class PyIntLiteral(value: Int, numExamples: Int,
+                        predicates: Predicates) extends LiteralNode[Int](numExamples) with PyIntNode
 {
   override protected val parenless: Boolean = true
   override val code: String = value.toString
 
+  override def updateValues(predicates_t: Predicates) = this.copy(numExamples = predicates_t.num_of_examples, predicates = predicates_t)
+//  override def updateValues(predicates_t: Predicates) = this.copy(value = value, numExamples = predicates_t.num_of_examples,
+//    predicates = predicates_t)
 }
 
-case class PyBoolLiteral(val value: Boolean, numExamples: Int,
-                         val predicates: Predicates) extends LiteralNode[Boolean](numExamples) with PyBoolNode
+case class PyBoolLiteral(value: Boolean, numExamples: Int,
+                         predicates: Predicates) extends LiteralNode[Boolean](numExamples) with PyBoolNode
 {
   override protected val parenless: Boolean = true
   override val code: String = value.toString.capitalize
-
+  override def updateValues(predicates_t: Predicates) = this.copy(value = value, numExamples = predicates_t.num_of_examples,
+    predicates = predicates_t)
 }

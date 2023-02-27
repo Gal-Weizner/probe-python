@@ -149,9 +149,9 @@ object PythonPBETask
 
     val vocab: List[VocabMaker] = {
       PySynthesisVocab.makeLiterals(stringLiterals, List(0,1,-1,3)) ++ PySynthesisVocab.makeBasicVocab() ++
-        PySynthesisVocab.makeComprehensions(predicates_t, size)
+        PySynthesisVocab.makeComprehensions(predicates_t, size) ++ PySynthesisVocab.makeVariables(variables)
     }
 
-    VocabFactory(vocab.appendedAll(PySynthesisVocab.makeVariables(variables)), predicates_t)
+    VocabFactory(vocab, predicates_t)
   }
 }

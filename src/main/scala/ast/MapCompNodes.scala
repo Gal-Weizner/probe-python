@@ -40,6 +40,8 @@ trait MapCompNode[K,V] extends MapNode[K,V]
   override def includes(varName: String): Boolean =
     varName.equals(this.varName) || list.includes(varName) || key.includes(varName) || value.includes(varName)
   override lazy val usesVariables: Boolean = list.usesVariables || key.usesVariables || value.usesVariables
+  override def updateValues(predicates: Predicates) = ???
+
 
 }
 
@@ -60,7 +62,7 @@ trait FilteredMapNode[K,V] extends MapNode[K,V]
   override val code: String = s"{$keyName: ${map.code}[$keyName] for $keyName in ${map.code} if ${filter.code}}"
 
   override def computeOnContext(ctx: Map[String, Any]): Option[List[Map[K,V]]] = {
-    Some(filterOp(map, filter))
+    Some(filterOp(map, filter, ctx))
   }
 
   override def includes(varName: String): Boolean =
@@ -84,22 +86,27 @@ trait FilteredMapNode[K,V] extends MapNode[K,V]
       keyVar.head
     }
   }
-  def filterOp(map: MapNode[K,V], filter: PyBoolNode) : List[Map[K,V]] =
-  {
-    ???
-//    val keyNode: VariableNode[Boolean] = findKeyVar(filter.children).get.asInstanceOf[VariableNode[Boolean]]
-//    val examples = map.predicates.predicates.map(pred => pred.observe(this).asInstanceOf[Iterable[Any]])
-//    val filterValues = splitByIterable(examples, filter.values)
-//    val keyValues = splitByIterable(examples, keyNode.values)
-//    map.values
-//      .zip(keyValues.zip(filterValues).map(tup => tup._1.zip(tup._2)))
-//      .map( {
-//        case (valMap: Map[K,V], keyMap: Iterable[(K,Boolean)]) =>
-//          valMap.filter({
-//            case (k: K, _: V) => keyMap.find(_._1.equals(k)).get._2
-//          })
-//      })
+  def filterOp(map: MapNode[K,V], filter: PyBoolNode, ctx: Map[String, Any]) : List[Map[K,V]] = {
+    val keyNode: VariableNode[Boolean] = findKeyVar(filter.children).get.asInstanceOf[VariableNode[Boolean]]
+    val (key_start, key_length) = predicates.getCurrentIterableRange(ctx, keyNode.values.asInstanceOf[List[Iterable[_]]])
+    val (filter_start, filter_length) = predicates.getCurrentIterableRange(ctx, filter.values.asInstanceOf[List[Iterable[_]]])
+    val filter_t = filter.values.slice(filter_start, filter_start + filter_length)
+    val key_t = keyNode.values.slice(key_start, key_start + key_length)
+    val map_t = map.values.slice(filter_start, filter_start + filter_length)
+    List[Map[K,V]]()
+    //    val filterValues = splitByIterable(map.values, filter.values)
+    //    val keyValues = splitByIterable(map.values, keyNode.values)
+//    map_t.zip(key_t.zip(filter_t))
+
+    //      .zip(keyValues.zip(filterValues).map(tup => tup._1.zip(tup._2)))
+    //      .map({
+    //        case (valMap: Map[K, V], keyMap: Iterable[(K, Boolean)]) =>
+    //          valMap.filter({
+    //            case (k: K, _: V) => keyMap.find(_._1.equals(k)).get._2
+    //          })
+    //      })
   }
+  override def updateValues(predicates: Predicates) = ???
 
 }
 

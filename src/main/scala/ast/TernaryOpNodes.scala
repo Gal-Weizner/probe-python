@@ -18,7 +18,7 @@ trait TernaryOpNode[T] extends ASTNode
   assert(arg0.values.length == arg1.values.length && arg1.values.length == arg2.values.length)
 
   override def computeOnContext(ctx: Map[String, Any]): Option[Any] = {
-    doOp(predicates.getExampleValue(arg0.values, ctx), predicates.getExampleValue(arg1.values, ctx), predicates.getExampleValue(arg2.values, ctx))
+    doOp(arg0.predicates.getExampleValue(arg0.values, ctx), arg1.predicates.getExampleValue(arg1.values, ctx), arg2.predicates.getExampleValue(arg2.values, ctx))
   }
   def doOp(a0: Any, a1: Any, a2: Any): Option[T]
 
@@ -46,6 +46,10 @@ case class StringReplace(val arg0: StringNode, val arg1: StringNode, val arg2: S
 
   override def make(a0: ASTNode, a1: ASTNode, a2: ASTNode): TernaryOpNode[String] =
     new StringReplace(a0.asInstanceOf[StringNode], a1.asInstanceOf[StringNode], a2.asInstanceOf[StringNode], predicates)
+
+  override def updateValues(predicates_t: Predicates) = this.copy(arg0 = arg0.updateValues(predicates_t).asInstanceOf[StringNode],
+    arg1 = arg1.updateValues(predicates_t).asInstanceOf[StringNode], arg2 = arg2.updateValues(predicates_t).asInstanceOf[StringNode],
+    predicates = predicates_t)
 }
 
 case class StringITE(val arg0: BoolNode, val arg1: StringNode,
@@ -61,6 +65,10 @@ case class StringITE(val arg0: BoolNode, val arg1: StringNode,
   override lazy val code: String = List(arg0.code,arg1.code,arg2.code).mkString("(ite "," ",")")
   override def make(a0: ASTNode, a1: ASTNode, a2: ASTNode): TernaryOpNode[String] =
     new StringITE(a0.asInstanceOf[BoolNode], a1.asInstanceOf[StringNode], a2.asInstanceOf[StringNode], predicates)
+
+  override def updateValues(predicates_t: Predicates) = this.copy(arg0 = arg0.updateValues(predicates_t).asInstanceOf[BoolNode],
+    arg1 = arg1.updateValues(predicates_t).asInstanceOf[StringNode], arg2 = arg2.updateValues(predicates_t).asInstanceOf[StringNode],
+    predicates = predicates_t)
 
 }
 
@@ -78,6 +86,10 @@ case class IntITE(val arg0: BoolNode, val arg1: IntNode,
   override lazy val code: String = List(arg0.code,arg1.code,arg2.code).mkString("(ite "," ",")")
   override def make(a0: ASTNode, a1: ASTNode, a2: ASTNode): TernaryOpNode[Int] =
     new IntITE(a0.asInstanceOf[BoolNode], a1.asInstanceOf[IntNode], a2.asInstanceOf[IntNode], predicates)
+
+  override def updateValues(predicates_t: Predicates) = this.copy(arg0 = arg0.updateValues(predicates_t).asInstanceOf[BoolNode],
+    arg1 = arg1.updateValues(predicates_t).asInstanceOf[IntNode], arg2 = arg2.updateValues(predicates_t).asInstanceOf[IntNode],
+    predicates = predicates_t)
 
 
 }
@@ -99,6 +111,10 @@ case class Substring(val arg0: StringNode, val arg1: IntNode,
   override lazy val code: String = List(arg0.code,arg1.code,arg2.code).mkString("(str.substr "," ",")")
   override def make(a0: ASTNode, a1: ASTNode, a2: ASTNode): TernaryOpNode[String] =
     new Substring(a0.asInstanceOf[StringNode], a1.asInstanceOf[IntNode], a2.asInstanceOf[IntNode], predicates)
+
+  override def updateValues(predicates_t: Predicates) = this.copy(arg0 = arg0.updateValues(predicates_t).asInstanceOf[StringNode],
+    arg1 = arg1.updateValues(predicates_t).asInstanceOf[IntNode], arg2 = arg2.updateValues(predicates_t).asInstanceOf[IntNode],
+    predicates = predicates_t)
 }
 
 case class IndexOf(val arg0: StringNode, val arg1: StringNode,
@@ -113,6 +129,10 @@ case class IndexOf(val arg0: StringNode, val arg1: StringNode,
   override lazy val code: String = List(arg0.code,arg1.code,arg2.code).mkString("(str.indexof "," ",")")
   override def make(a0: ASTNode, a1: ASTNode, a2: ASTNode): TernaryOpNode[Int] =
     new IndexOf(a0.asInstanceOf[StringNode], a1.asInstanceOf[StringNode], a2.asInstanceOf[IntNode], predicates)
+
+  override def updateValues(predicates_t: Predicates) = this.copy(arg0.updateValues(predicates_t).asInstanceOf[StringNode],
+    arg1 = arg1.updateValues(predicates_t).asInstanceOf[StringNode], arg2 = arg2.updateValues(predicates_t).asInstanceOf[IntNode],
+    predicates = predicates_t)
 
 }
 
@@ -129,6 +149,10 @@ case class BVITE(val arg0: BoolNode, val arg1: BVNode,
   override val code: String = List(arg0.code,arg1.code,arg2.code).mkString("(ite "," ",")")
   override def make(a0: ASTNode, a1: ASTNode, a2: ASTNode): TernaryOpNode[Long] =
     new BVITE(a0.asInstanceOf[BoolNode], a1.asInstanceOf[BVNode], a2.asInstanceOf[BVNode], predicates)
+
+  override def updateValues(predicates_t: Predicates) = this.copy(arg0 = arg0.updateValues(predicates_t).asInstanceOf[BoolNode],
+    arg1 = arg1.updateValues(predicates_t).asInstanceOf[BVNode], arg2 = arg2.updateValues(predicates_t).asInstanceOf[BVNode],
+    predicates = predicates_t)
 
 }
 
@@ -147,6 +171,9 @@ case class PyStringReplace(val arg0: PyStringNode, val arg1: PyStringNode,
 
   override def make(a0: ASTNode, a1: ASTNode, a2: ASTNode): TernaryOpNode[String] =
     new PyStringReplace(a0.asInstanceOf[PyStringNode], a1.asInstanceOf[PyStringNode], a2.asInstanceOf[PyStringNode], predicates)
+
+  override def updateValues(predicates_t: Predicates) = this.copy(arg0 = arg0.updateValues(predicates_t).asInstanceOf[PyStringNode],
+    arg1 = arg1.updateValues(predicates_t).asInstanceOf[PyStringNode], arg2 = arg2.updateValues(predicates_t).asInstanceOf[PyStringNode], predicates = predicates_t)
 
 }
 
@@ -175,4 +202,6 @@ case class TernarySubstring(val arg0: PyStringNode, val arg1: PyIntNode,
   override def make(a0: ASTNode, a1: ASTNode, a2: ASTNode): TernaryOpNode[String] =
     new TernarySubstring(a0.asInstanceOf[PyStringNode], a1.asInstanceOf[PyIntNode], a2.asInstanceOf[PyIntNode], predicates)
 
+  override def updateValues(predicates_t: Predicates) = this.copy(arg0 = arg0.updateValues(predicates_t).asInstanceOf[PyStringNode],
+    arg1 = arg1.updateValues(predicates_t).asInstanceOf[PyIntNode], arg2 = arg2.updateValues(predicates_t).asInstanceOf[PyIntNode], predicates = predicates_t)
 }

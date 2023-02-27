@@ -141,7 +141,7 @@ abstract class ListCompVocabMaker(inputListType: Types, outputListType: Types, s
       vocabFactory.nodeMakers.filter(c => c.isInstanceOf[BasicVocabMaker]
         && c.returnType.equals(this.outputListType)) // We don't support nested list comprehensions
 
-    this.mapVocab = VocabFactory.apply(vocabs, predicates)
+    this.mapVocab = VocabFactory(vocabs, predicates)
     this.nextList()
     this
   }
@@ -235,7 +235,7 @@ abstract class ListCompVocabMaker(inputListType: Types, outputListType: Types, s
 //        }
         val example_predicates = for ((predicate, listVal) <- this.predicates.getExamplePredicates().zip(lst.values.take(this.predicates.num_of_examples));
                                       elem <- listVal.toString.toList) yield {
-          predicate.updatePredicate(varName, elem)
+          predicate.updatePredicate(varName, elem.toString)
         }
         val new_predicates = example_predicates ++ this.predicates.getNonExamplePredicates()
         val newPredicatesClass = new Predicates(new_predicates, example_predicates.length)

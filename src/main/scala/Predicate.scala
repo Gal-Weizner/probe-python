@@ -14,7 +14,7 @@ class Predicates(var predicates: List[Predicate], var num_of_examples: Int)
 
   def getCurrentIterableRange(ctx: Map[String, Any], list_values: List[Iterable[_]]): (Int, Int) = {
     var start = 0
-    for ((pred,l) <- getExamplePredicates().zip(list_values))
+    for ((pred,l) <- this.getExamplePredicates().zip(list_values))
         if (pred.context == ctx) return (start, l.size)
         else start += l.size
     (-1,-1)

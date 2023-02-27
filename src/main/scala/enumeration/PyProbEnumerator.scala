@@ -49,10 +49,10 @@ class PyProbEnumerator(val vocab: VocabFactory,
 //  Contexts.contexts = this.predicates.predicates.take(this.predicates.num_of_examples)
 
   mainBank.map(n => (n._1, n._2.filter(c => (!c.includes("key") && !c.includes("var"))))).
-  values.flatten.toList.map(p => oeManager.isRepresentative(p))
-//    if (p.values.length != Contexts.contextLen)
-//      oeManager.isRepresentative(p.updateValues)
-//    else oeManager.isRepresentative(p)) // OE
+  values.flatten.toList.map(p =>
+  if (p.values.length != predicates_t.num_of_examples)
+    oeManager.isRepresentative(p.updateValues(predicates_t))
+  else oeManager.isRepresentative(p)) // OE
 
   if (vars != null) vars.values.flatten.toList.map(p => oeManager.isRepresentative(p)) // OE
   var rootMaker: Iterator[ASTNode] = currIterator.next().

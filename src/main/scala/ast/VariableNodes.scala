@@ -22,22 +22,40 @@ abstract class VariableNode[T](predicates: Predicates) extends ASTNode
 }
 
 case class StringVariable(val name: String,
-                          val predicates: Predicates) extends VariableNode[String](predicates) with StringNode
+                          val predicates: Predicates) extends VariableNode[String](predicates) with StringNode {
+  override def updateValues(predicates_t: Predicates) = this.copy(name = name, predicates = predicates_t)
+}
 
-case class PyStringVariable(val name: String, val predicates: Predicates) extends VariableNode[String](predicates) with PyStringNode
+case class PyStringVariable(val name: String, val predicates: Predicates) extends VariableNode[String](predicates) with PyStringNode{
+  override def updateValues(predicates_t: Predicates) = this.copy(name = name, predicates = predicates_t)
+}
 
-case class IntVariable(val name: String, val predicates: Predicates) extends VariableNode[Int](predicates) with IntNode
+case class IntVariable(val name: String, val predicates: Predicates) extends VariableNode[Int](predicates) with IntNode{
+  override def updateValues(predicates_t: Predicates) = this.copy(name = name, predicates = predicates_t)
+}
 
-case class PyIntVariable(val name: String, val predicates: Predicates) extends VariableNode[Int](predicates) with PyIntNode
+case class PyIntVariable(val name: String, val predicates: Predicates) extends VariableNode[Int](predicates) with PyIntNode{
+  override def updateValues(predicates_t: Predicates) = this.copy(name = name, predicates = predicates_t)
+}
 
-case class BoolVariable(val name: String, val predicates: Predicates) extends VariableNode[Boolean](predicates) with BoolNode
+case class BoolVariable(val name: String, val predicates: Predicates) extends VariableNode[Boolean](predicates) with BoolNode{
+  override def updateValues(predicates_t: Predicates) = this.copy(name = name, predicates = predicates_t)
+}
 
-case class PyBoolVariable(val name: String, val predicates: Predicates) extends VariableNode[Boolean](predicates) with PyBoolNode
+case class PyBoolVariable(val name: String, val predicates: Predicates) extends VariableNode[Boolean](predicates) with PyBoolNode{
+  override def updateValues(predicates_t: Predicates) = this.copy(name = name, predicates = predicates_t)
+}
 
-case class BVVariable(val name: String, val predicates: Predicates) extends VariableNode[Long](predicates) with BVNode
+case class BVVariable(val name: String, val predicates: Predicates) extends VariableNode[Long](predicates) with BVNode{
+  override def updateValues(predicates_t: Predicates) = this.copy(name = name, predicates = predicates_t)
+}
 
 case class ListVariable[T](val name: String, val childType: Types,
-                           val predicates: Predicates) extends VariableNode[List[T]](predicates) with ListNode[T]
+                           val predicates: Predicates) extends VariableNode[List[T]](predicates) with ListNode[T] {
+  override def updateValues(predicates_t: Predicates) = this.copy(name = name, predicates = predicates_t)
+}
 
 case class MapVariable[K,V](val name: String, val keyType: Types, val valType: Types,
-                            val predicates: Predicates) extends VariableNode[Map[K,V]](predicates) with MapNode[K,V]
+                            val predicates: Predicates) extends VariableNode[Map[K,V]](predicates) with MapNode[K,V] {
+  override def updateValues(predicates_t: Predicates) = this.copy(name = name, predicates = predicates_t)
+}

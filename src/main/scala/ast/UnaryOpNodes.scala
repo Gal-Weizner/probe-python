@@ -5,7 +5,7 @@ import sygus.Predicates
 
 trait UnaryOpNode[T] extends ASTNode
 {
-  override def computeOnContext(ctx: Map[String, Any]): Option[Any] = doOp(predicates.getExampleValue(arg.values, ctx))  //doOp(arg.computeOnContext(ctx))
+  override def computeOnContext(ctx: Map[String, Any]): Option[Any] = doOp(arg.predicates.getExampleValue(arg.values, ctx))
   override val height: Int = 1 + arg.height
   override val terms: Int = 1 + arg.terms
   override val children: Iterable[ASTNode] = Iterable(arg)
@@ -33,6 +33,9 @@ case class IntToString(val arg: IntNode, val predicates: Predicates) extends Una
   override lazy val code: String = "(int.to.str " + arg.code + ")"
   override def make(x: ASTNode): UnaryOpNode[String] =
     new IntToString(x.asInstanceOf[IntNode], predicates)
+  override def updateValues(predicates_t: Predicates) = this.copy(arg = arg.updateValues(predicates: Predicates).asInstanceOf[IntNode],
+    predicates = predicates_t)
+
 }
 
 case class StringToInt(val arg: StringNode, val predicates: Predicates) extends UnaryOpNode[Int] with IntNode {
@@ -48,6 +51,9 @@ case class StringToInt(val arg: StringNode, val predicates: Predicates) extends 
   override lazy val code: String = "(str.to.int " + arg.code + ")"
   override def make(x: ASTNode): UnaryOpNode[Int] =
     new StringToInt(x.asInstanceOf[StringNode], predicates)
+  override def updateValues(predicates_t: Predicates) = this.copy(arg = arg.updateValues(predicates_t: Predicates).asInstanceOf[StringNode],
+    predicates = predicates_t)
+
 
 }
 
@@ -60,6 +66,9 @@ case class StringLength(val arg: StringNode, val predicates: Predicates) extends
   override lazy val code: String = "(str.len " + arg.code + ")"
   override def make(x: ASTNode): UnaryOpNode[Int] =
     new StringLength(x.asInstanceOf[StringNode], predicates)
+  override def updateValues(predicates_t: Predicates) = this.copy(arg = arg.updateValues(predicates_t: Predicates).asInstanceOf[StringNode],
+    predicates = predicates_t)
+
 
 }
 
@@ -73,6 +82,9 @@ case class BVNot(val arg: BVNode, val predicates: Predicates) extends UnaryOpNod
   override lazy val code: String = "(bvnot " + arg.code + ")"
   override def make(x: ASTNode): UnaryOpNode[Long] =
     new BVNot(x.asInstanceOf[BVNode], predicates)
+  override def updateValues(predicates_t: Predicates) = this.copy(arg = arg.updateValues(predicates_t: Predicates).asInstanceOf[BVNode],
+    predicates = predicates_t )
+
 
 }
 
@@ -86,6 +98,9 @@ case class BVNeg(val arg: BVNode, val predicates: Predicates) extends UnaryOpNod
   override val code: String = "(bvneg " + arg.code + ")"
   override def make(x: ASTNode): UnaryOpNode[Long] =
     new BVNeg(x.asInstanceOf[BVNode], predicates)
+  override def updateValues(predicates_t: Predicates) = this.copy(arg = arg.updateValues(predicates_t: Predicates).asInstanceOf[BVNode],
+    predicates = predicates_t )
+
 
 }
 
@@ -99,6 +114,9 @@ case class LNot(val arg: BoolNode, val predicates: Predicates) extends UnaryOpNo
   override val code: String = "(not " + arg.code + ")"
   override def make(x: ASTNode): UnaryOpNode[Boolean] =
     new LNot(x.asInstanceOf[BoolNode], predicates)
+  override def updateValues(predicates_t: Predicates) = this.copy(arg = arg.updateValues(predicates_t: Predicates).asInstanceOf[BoolNode],
+    predicates = predicates_t)
+
 
 }
 
@@ -114,6 +132,9 @@ case class PyIntToString(val arg: PyIntNode, val predicates: Predicates) extends
 
   override def make(x: ASTNode): UnaryOpNode[String] =
     new PyIntToString(x.asInstanceOf[PyIntNode], predicates)
+  override def updateValues(predicates_t: Predicates) = this.copy(arg = arg.updateValues(predicates_t: Predicates).asInstanceOf[PyIntNode],
+    predicates = predicates_t)
+
 
 }
 
@@ -134,7 +155,8 @@ case class PyStringToInt(val arg: PyStringNode, val predicates: Predicates) exte
 
   override def make(x: ASTNode): UnaryOpNode[Int] =
     new PyStringToInt(x.asInstanceOf[PyStringNode], predicates)
-
+  override def updateValues(predicates_t: Predicates) = this.copy(arg = arg.updateValues(predicates_t: Predicates).asInstanceOf[PyStringNode],
+    predicates = predicates_t)
 }
 
 case class PyLength(val arg: IterableNode, val predicates: Predicates) extends UnaryOpNode[Int] with PyIntNode
@@ -152,6 +174,9 @@ case class PyLength(val arg: IterableNode, val predicates: Predicates) extends U
 
   override def make(x: ASTNode): UnaryOpNode[Int] =
     new PyLength(x.asInstanceOf[IterableNode], predicates)
+  override def updateValues(predicates_t: Predicates) = this.copy(arg = arg.updateValues(predicates_t: Predicates).asInstanceOf[IterableNode],
+    predicates = predicates_t)
+
 }
 
 case class PyStringLower(val arg: PyStringNode, val predicates: Predicates) extends UnaryOpNode[String] with PyStringNode
@@ -166,6 +191,9 @@ case class PyStringLower(val arg: PyStringNode, val predicates: Predicates) exte
 
   override def make(x: ASTNode): UnaryOpNode[String] =
     new PyStringLower(x.asInstanceOf[PyStringNode], predicates)
+  override def updateValues(predicates_t: Predicates) = this.copy(arg = arg.updateValues(predicates_t: Predicates).asInstanceOf[PyStringNode],
+    predicates = predicates_t)
+
 }
 
 case class PyStringUpper(val arg: PyStringNode, val predicates: Predicates) extends UnaryOpNode[String] with PyStringNode
@@ -180,6 +208,9 @@ case class PyStringUpper(val arg: PyStringNode, val predicates: Predicates) exte
 
   override def make(x: ASTNode): UnaryOpNode[String] =
     new PyStringUpper(x.asInstanceOf[PyStringNode], predicates)
+  override def updateValues(predicates_t: Predicates) = this.copy(arg = arg.updateValues(predicates_t: Predicates).asInstanceOf[PyStringNode],
+    predicates = predicates_t)
+
 }
 
 case class PyMax(val arg: ListNode[Int], val predicates: Predicates) extends UnaryOpNode[Int] with PyIntNode {
@@ -192,6 +223,9 @@ case class PyMax(val arg: ListNode[Int], val predicates: Predicates) extends Una
 
   override def make(x: ASTNode): UnaryOpNode[Int] =
     new PyMax(x.asInstanceOf[ListNode[Int]], predicates)
+  override def updateValues(predicates_t: Predicates) = this.copy(arg = arg.updateValues(predicates_t: Predicates).asInstanceOf[ListNode[Int]],
+    predicates = predicates_t)
+
 }
 
 case class PyMin(val arg: ListNode[Int], val predicates: Predicates) extends UnaryOpNode[Int] with PyIntNode {
@@ -204,6 +238,9 @@ case class PyMin(val arg: ListNode[Int], val predicates: Predicates) extends Una
 
   override def make(x: ASTNode): UnaryOpNode[Int] =
     new PyMin(x.asInstanceOf[ListNode[Int]], predicates)
+  override def updateValues(predicates_t: Predicates) = this.copy(arg = arg.updateValues(predicates_t: Predicates).asInstanceOf[ListNode[Int]],
+    predicates = predicates_t)
+
 
 }
 
@@ -217,7 +254,8 @@ case class PyIsAlpha(val arg: PyStringNode, val predicates: Predicates) extends 
 
   override def make(x: ASTNode): UnaryOpNode[Boolean] =
     new PyIsAlpha(x.asInstanceOf[PyStringNode], predicates)
-
+  override def updateValues(predicates_t: Predicates) = this.copy(arg = arg.updateValues(predicates_t: Predicates).asInstanceOf[PyStringNode],
+    predicates = predicates_t)
 }
 
 case class PyIsNumeric(val arg: PyStringNode, val predicates: Predicates) extends UnaryOpNode[Boolean] with BoolNode {
@@ -230,6 +268,9 @@ case class PyIsNumeric(val arg: PyStringNode, val predicates: Predicates) extend
 
   override def make(x: ASTNode): UnaryOpNode[Boolean] =
     new PyIsNumeric(x.asInstanceOf[PyStringNode], predicates)
+  override def updateValues(predicates_t: Predicates) = this.copy(arg = arg.updateValues(predicates_t: Predicates).asInstanceOf[PyStringNode],
+    predicates = predicates_t)
+
 
 }
 
@@ -244,5 +285,8 @@ case class PySortedStringList(val arg: ListNode[String], val predicates: Predica
 
   override def make(x: ASTNode): UnaryOpNode[Iterable[String]] =
     new PySortedStringList(x.asInstanceOf[ListNode[String]], predicates)
+  override def updateValues(predicates_t: Predicates) = this.copy(arg = arg.updateValues(predicates_t: Predicates).asInstanceOf[ListNode[String]],
+    predicates = predicates_t)
+
 }
 
