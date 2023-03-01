@@ -112,8 +112,7 @@ abstract class MapCompVocabMaker(iterableType: Types, valueType: Types,
                           varBank: mutable.Map[(Class[_], ASTNode), mutable.Map[Int, mutable.ArrayBuffer[ASTNode]]],
                           mini: mutable.Map[Int, mutable.ArrayBuffer[ASTNode]]) : Iterator[ASTNode] = {
 
-     this.mainBank = bank.map(n => (n._1, n._2.filter(c => !c.includes(this.varName))))
-     this.listIter = this.mainBank.dropRight(1).values.flatten.toList.filter(n => n.nodeType.equals(this.iterableType)).iterator
+
 
      /**
      * The outer enumerator bank contains list and dictionary comprehension programs
@@ -128,6 +127,9 @@ abstract class MapCompVocabMaker(iterableType: Types, valueType: Types,
     // TODO We need a nicer way to generate this
      while (predicates_t.predicates.take(predicates_t.num_of_examples).head.
        asInstanceOf[ExamplePredicate].context.contains(this.varName)) this.varName = "_" + this.varName
+
+     this.mainBank = bank.map(n => (n._1, n._2.filter(c => !c.includes(this.varName))))
+     this.listIter = this.mainBank.dropRight(1).values.flatten.toList.filter(n => n.nodeType.equals(this.iterableType)).iterator
 
     // Filter the vocabs for the map function
     // TODO There has to be a more efficient way

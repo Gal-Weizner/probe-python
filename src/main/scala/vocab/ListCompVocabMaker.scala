@@ -234,7 +234,7 @@ abstract class ListCompVocabMaker(inputListType: Types, outputListType: Types, s
 //          predicate.updatePredicate(this.varName, value)
 //        }
         val example_predicates = for ((predicate, listVal) <- this.predicates.getExamplePredicates().zip(lst.values.take(this.predicates.num_of_examples));
-                                      elem <- listVal.toString.toList) yield {
+                                      elem <- listVal.asInstanceOf[Iterable[Any]]) yield {
           predicate.updatePredicate(varName, elem.toString)
         }
         val new_predicates = example_predicates ++ this.predicates.getNonExamplePredicates()

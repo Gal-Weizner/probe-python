@@ -12,10 +12,10 @@ trait ListCompNode[T] extends ListNode[T]
   override val childType: Types = map.nodeType
   override def computeOnContext(ctx: Map[String, Any]): Option[List[T]] = {
     val (start, length) = predicates.getCurrentIterableRange(ctx, list.values.asInstanceOf[List[Iterable[_]]])
-    val value_t = list.values.slice(start, start + length)
-    val map_t = map.values.slice(start, start + length)
-    val res = map_t.zip(value_t).asInstanceOf[List[T]]
-    Some(res)
+    //val value_t = list.values.slice(start, start + length)
+    val mappedElem = map.values.slice(start, start + length)
+    //val res = map_t.zip(value_t).asInstanceOf[List[T]]
+    Some(mappedElem.asInstanceOf[List[T]])
   }
   override val height: Int = 1 + Math.max(list.height, map.height)
   override val terms: Int = 1 + list.terms + map.terms

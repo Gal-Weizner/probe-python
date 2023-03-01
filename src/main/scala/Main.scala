@@ -123,7 +123,7 @@ object Main extends App {
           if (results.forall(identity)) {
             if (program.usesVariables) {
               rs = Some(
-                (task.asInstanceOf[sygus.PythonPBETask].outputVar + " = " + PostProcessor.clean(program, task.predicates).code,
+                (task.asInstanceOf[sygus.PythonPBETask].outputVar + " = " + PostProcessor.clean(program).code,
                   timeout * 1000 - deadline.timeLeft.toMillis.toInt))
               println(rs.get._1, rs.get._2, program.height, program.cost, bank.values.toList.length)
               break
@@ -135,7 +135,7 @@ object Main extends App {
         }
 
         if (trace.DebugPrints.debug) {
-          val p = PostProcessor.clean(program, null)
+          val p = PostProcessor.clean(program)
           println(s"[$i] (${program.height}) ${p.code}")
         }
       }
