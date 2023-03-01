@@ -13,8 +13,8 @@ class PyProbEnumerator(val vocab: VocabFactory,
                        val predicates_t: Predicates,
                        var nested: Boolean,
                        var initCost: Int,
-                       var mainBank: mutable.Map[Int, mutable.ArrayBuffer[ASTNode]],
-                       var vars: mutable.Map[Int, mutable.ArrayBuffer[ASTNode]]) extends Iterator[ASTNode] {
+                       outerMainBank: mutable.Map[Int, mutable.ArrayBuffer[ASTNode]],
+                       outerVars: mutable.Map[Int, mutable.ArrayBuffer[ASTNode]]) extends Iterator[ASTNode] {
 
   override def toString(): String = "enumeration.Enumerator"
   var nextProgram: Option[ASTNode] = None
@@ -48,13 +48,28 @@ class PyProbEnumerator(val vocab: VocabFactory,
 //  Contexts.contextLen = this.predicates.num_of_examples
 //  Contexts.contexts = this.predicates.predicates.take(this.predicates.num_of_examples)
 
-  mainBank.map(n => (n._1, n._2.filter(c => (!c.includes("key") && !c.includes("var"))))).
-  values.flatten.toList.map(p =>
-  if (p.values.length != predicates_t.num_of_examples)
-    oeManager.isRepresentative(p.updateValues(predicates_t))
-  else oeManager.isRepresentative(p)) // OE
+  val mainBank = for ((cost,nodeList) <- outerMainBank) yield (cost,
+      for (node <- nodeList if !node.includes("key") && !node.includes("var")) yield {
+        val nodeWithNewPreds = node.updateValues(predicates_t)
+        oeManager.isRepresentative(nodeWithNewPreds)
+        nodeWithNewPreds
+      }
+    )
+//  mainBank.map(n => (n._1, n._2.filter(c => (!c.includes("key") && !c.includes("var"))))).
+//  values.flatten.toList.map(p =>
+//  if (p.predicates != predicates_t)
+//    oeManager.isRepresentative(p.updateValues(predicates_t))
+//  else oeManager.isRepresentative(p)) // OE
 
-  if (vars != null) vars.values.flatten.toList.map(p => oeManager.isRepresentative(p)) // OE
+  val vars = if (outerVars == null) null
+    else for ((cost,varlist) <- outerVars) yield (cost,
+      for (v <- varlist) yield {
+        val withNewPreds = v.updateValues(predicates_t)
+        oeManager.isRepresentative(withNewPreds)
+        withNewPreds
+      }
+    )
+  //if (vars != null) vars.values.flatten.toList.map(p => oeManager.isRepresentative(p)) // OE
   var rootMaker: Iterator[ASTNode] = currIterator.next().
     probe_init(vocab, costLevel, predicates_t, mainBank, nested, varBank, vars)
 
