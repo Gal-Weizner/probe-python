@@ -22,6 +22,7 @@ object Main extends App {
 //  "src/test/resources/new_benchmarks/count_substring.examples.json"
 //    "src/test/resources/new_benchmarks/check_uses_variables.examples.json"
 //    "src/test/resources/new_benchmarks/modulo_3.examples.json"
+//  "src/test/resources/new_benchmarks/divide_by_3.examples.json"
   //"src/test/resources/new_benchmarks/rotate_concat.examples.json"
 //  "src/test/resources/benchmarks/abbreviate_1_ex.examples.json"
 //   "src/test/resources/old_benchmarks/string_length.examples.json"
@@ -117,10 +118,10 @@ object Main extends App {
           break
         }
         if (program.nodeType == task.returnType) {
-          val results = task.examples
-            .zip(program.values)
-            .map(pair => pair._1.output == pair._2)
-          if (results.forall(identity)) {
+//          val results = task.examples
+//            .zip(program.values)
+//            .map(pair => pair._1.output == pair._2)
+          if (task.predicates.allHolds(program)) {
             if (program.usesVariables) {
               rs = Some(
                 (task.asInstanceOf[sygus.PythonPBETask].outputVar + " = " + PostProcessor.clean(program).code,

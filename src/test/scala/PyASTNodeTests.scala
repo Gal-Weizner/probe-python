@@ -2,11 +2,15 @@ import ast._
 import org.junit.Test
 import org.scalatestplus.junit.JUnitSuite
 import org.junit.Assert._
+import sygus.{ExamplePredicate, Predicates}
 
 class PyASTNodeTests extends JUnitSuite {
 
   @Test def stringLiteralNode(): Unit = {
-    val literal: PyStringLiteral = new PyStringLiteral("abc", 1)
+    val input = Map("inp1" -> "'Welcome to USA. usa usa usa usa!'", "inp2" -> "'USA'", "rs" -> "5")
+    val example_predicate = ExamplePredicate(input)
+    val predicates = Predicates(List(example_predicate), 1)
+    val literal: PyStringLiteral = new PyStringLiteral("abc", 1, predicates)
     assertEquals(1, literal.values.length)
     assertEquals("abc", literal.values.head)
     assertEquals(Types.PyString, literal.nodeType)

@@ -46,13 +46,13 @@ class Predicates(var predicates: List[Predicate], var num_of_examples: Int)
   {
     val mask = predicates.map(_.check(program) == True)
     var all: Boolean = false
-    if (mask.length == predicates.length)
+    if (mask.contains(false))
     {
-      all = true
+      all = false
     }
     else
       {
-        all = false
+        all = true
       }
     all
   }
