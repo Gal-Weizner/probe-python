@@ -112,9 +112,7 @@ object PythonPBETask
         // TODO Handle empty sets
         .filter(!_._2.equals(Types.Unknown))
         .toList
-    val predicates_list = input("env").asInstanceOf[List[Map[String, Any]]]
-      .map(cleanupInputs)
-      .map(env => ExamplePredicate(env))
+    val predicates_list = examples.map(ex => ExamplePredicate(ex.input, Some(ex.output)))
     val predicates = Predicates(predicates = predicates_list, num_of_examples = predicates_list.length)
     val additionalLiterals = getStringLiterals(examples)
     val vocab = PythonPBETask.vocabFactory(parameters,additionalLiterals, size, predicates)
