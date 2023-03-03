@@ -4,22 +4,25 @@ import enumeration.{ChildrenIterator, NestedChildrenIterator, ProbChildrenIterat
 import org.junit.Test
 import org.scalatestplus.junit.JUnitSuite
 import org.junit.Assert._
+import sygus.{ExamplePredicate, Predicates}
 
 import scala.collection.mutable
 import scala.collection.mutable.{ArrayBuffer, HashMap}
 
 class NestedChildrenIteratorsTests extends JUnitSuite {
   @Test def nestedIterator1(): Unit = {
+    val predicates1 = Predicates(List(ExamplePredicate(Map("name" -> "Sorin Lerner"), Option("")),
+      ExamplePredicate(Map("name" -> "Nadia"), Option(""))), 2)
+    val predicates2 = Predicates(List(ExamplePredicate(Map("var" -> "Sorin Lerner"), Option("")),
+      ExamplePredicate(Map("var" -> "Nadia"), Option(""))), 2)
     var main = mutable.Map[Int, mutable.ArrayBuffer[ASTNode]]()
     var mini = mutable.Map[Int, mutable.ArrayBuffer[ASTNode]]()
-    main += (1 -> ArrayBuffer(new PyIntLiteral(0, 2)))
-    mini += (1 -> ArrayBuffer(PyStringVariable("name", List(Map("name" -> "Sorin Lerner"),
-      Map("name" -> "Nadia"))),
-      PyStringVariable("var", List(Map("var" -> "Sorin Lerner"),
-        Map("var" -> "Nadia")))))
+    main += (1 -> ArrayBuffer(new PyIntLiteral(0, 2, predicates1)))
+    mini += (1 -> ArrayBuffer(PyStringVariable("name", predicates1),
+      PyStringVariable("var", predicates2)))
 
     val chit = new NestedChildrenIterator(List(Types.Iterable(Types.Any)), 1,
-      main, mini)
+      main, mini, predicates1)
     assertTrue(chit.hasNext)
     assertEquals(List("name"), chit.next().map(_.code))
     assertEquals(List("var"), chit.next().map(_.code))
@@ -29,15 +32,16 @@ class NestedChildrenIteratorsTests extends JUnitSuite {
   @Test def nestedIterator2(): Unit = {
     var main = mutable.Map[Int, mutable.ArrayBuffer[ASTNode]]()
     var mini = mutable.Map[Int, mutable.ArrayBuffer[ASTNode]]()
-    Contexts.contextLen = 3
-    main += (1 -> ArrayBuffer(new PyStringLiteral("s", 3),
-      new PyIntLiteral(0, 3)))
-    mini += (1 -> ArrayBuffer(PyStringVariable("name", List(Map("name" -> "SL"),
-      Map("name" -> "N"), Map("name" -> "SB"))),
-      PyStringVariable("var", List(Map("var" -> "SL"),
-        Map("var" -> "N"), Map("var" -> "SB")))))
+    val predicates1 = Predicates(List(ExamplePredicate(Map("name" -> "SL"), Option("")),
+      ExamplePredicate(Map("name" -> "N"), Option("")), ExamplePredicate(Map("name" -> "SB"), Option(""))), 3)
+    val predicates2 = Predicates(List(ExamplePredicate(Map("var" -> "SL"), Option("")),
+      ExamplePredicate(Map("var" -> "N"), Option("")), ExamplePredicate(Map("var" -> "SB"), Option(""))), 3)
+    main += (1 -> ArrayBuffer(new PyStringLiteral("s", 3, predicates2),
+      new PyIntLiteral(0, 3, predicates2)))
+    mini += (1 -> ArrayBuffer(PyStringVariable("name", predicates1),
+      PyStringVariable("var", predicates2)))
     val chit = new NestedChildrenIterator(List(Types.PyString, Types.PyString), 2,
-      main, mini)
+      main, mini, predicates1)
     assertTrue(chit.hasNext)
     assertEquals(List("name", "name"), chit.next().map(_.code))
     assertEquals(List("name", "var"), chit.next().map(_.code))
@@ -55,7 +59,10 @@ class NestedChildrenIteratorsTests extends JUnitSuite {
 
   @Test def onesIterator(): Unit = {
     //Limit by height
-    val nodes = List(new IntLiteral(1, 1), new IntLiteral(2, 1), new IntLiteral(3, 1), new IntAddition(new IntVariable("x", Map("x" -> 0) :: Nil), new IntLiteral(1, 1)))
+    val predicates = Predicates(List(ExamplePredicate(Map("x" -> 0), Option(0))), 0)
+    val nodes = List(new IntLiteral(1, 1, predicates), new IntLiteral(2, 1, predicates),
+      new IntLiteral(3, 1, predicates), new IntAddition(new IntVariable("x", predicates),
+        new IntLiteral(1, 1, predicates), predicates))
     val chit = new ChildrenIterator(nodes, List(Types.Int), 2)
     assertTrue(chit.hasNext)
     assertEquals(List("(+ x 1)"), chit.next().map(_.code))
@@ -63,7 +70,10 @@ class NestedChildrenIteratorsTests extends JUnitSuite {
   }
 
   @Test def pairsHeightFiltered(): Unit = {
-    val nodes = List(new IntLiteral(1, 1), new IntLiteral(2, 1), new IntLiteral(3, 1), new IntAddition(new IntVariable("x", Map("x" -> 0) :: Nil), new IntLiteral(1, 1)))
+    val predicates = Predicates(List(ExamplePredicate(Map("x" -> 0), Option(0))), 0)
+    val nodes = List(new IntLiteral(1, 1, predicates), new IntLiteral(2, 1, predicates),
+      new IntLiteral(3, 1, predicates), new IntAddition(new IntVariable("x", predicates),
+        new IntLiteral(1, 1, predicates), predicates))
     val chit = new ChildrenIterator(nodes, List(Types.Int, Types.Int), 2)
     assertTrue(chit.hasNext)
     assertEquals(List("1", "(+ x 1)"), chit.next().map(_.code))
@@ -76,44 +86,56 @@ class NestedChildrenIteratorsTests extends JUnitSuite {
     assertFalse(chit.hasNext)
   }
 
-  @Test def costRollingFourChildren: Unit = {
-    val nodes = List(
-      new IntNode {
-        override val values: List[Int] = List(0)
-        override val code: String = "0"
-        override val height: Int = 0
-        override val terms: Int = 1
-        override val children: Iterable[ASTNode] = Nil
-        override protected val parenless: Boolean = true
-
-        override val usesVariables: Boolean = false
-        override def includes(varName: String): Boolean = false
-        override def updateValues: ASTNode = null
-        override def cost: Int = 1
-      }, new IntNode {
-        override val values: List[Int] = List(1)
-        override val code: String = "1"
-        override val height: Int = 0
-        override val terms: Int = 1
-        override val children: Iterable[ASTNode] = Nil
-        override protected val parenless: Boolean = true
-
-        override val usesVariables: Boolean = false
-        override def includes(varName: String): Boolean = false
-        override def updateValues: ASTNode = null
-        override def cost: Int = 1
-
-      }, new IntNode {
-        override val values: List[Int] = List(2)
-        override val code: String = "x"
-        override val height: Int = 0
-        override val terms: Int = 1
-        override val children: Iterable[ASTNode] = Nil
-        override protected val parenless: Boolean = true
-        override def includes(varName: String): Boolean = false
-
-        override val usesVariables: Boolean = false
-        override def cost: Int = 1
-        override def updateValues: ASTNode = null  })
-  }
+//  @Test def costRollingFourChildren: Unit = {
+//    val nodes = List(
+//      new IntNode {
+//        override val values: List[Int] = List(0)
+//        override val code: String = "0"
+//        override val height: Int = 0
+//        override val terms: Int = 1
+//        override val children: Iterable[ASTNode] = Nil
+//        override protected val parenless: Boolean = true
+//
+//        override val usesVariables: Boolean = false
+//        override def includes(varName: String): Boolean = false
+//        override def updateValues(predicates: Predicates): ASTNode = null
+//        override def cost: Int = 1
+//
+//        override val predicates: Predicates = ???
+//
+//        override def computeOnContext(ctx: Map[String, Any]): Option[Any] = ???
+//      }, new IntNode {
+//        override val values: List[Int] = List(1)
+//        override val code: String = "1"
+//        override val height: Int = 0
+//        override val terms: Int = 1
+//        override val children: Iterable[ASTNode] = Nil
+//        override protected val parenless: Boolean = true
+//
+//        override val usesVariables: Boolean = false
+//        override def includes(varName: String): Boolean = false
+//        override def updateValues(predicates: Predicates): ASTNode = null
+//        override def cost: Int = 1
+//
+//        override val predicates: Predicates = ???
+//
+//        override def computeOnContext(ctx: Map[String, Any]): Option[Any] = ???
+//      }, new IntNode {
+//        override val values: List[Int] = List(2)
+//        override val code: String = "x"
+//        override val height: Int = 0
+//        override val terms: Int = 1
+//        override val children: Iterable[ASTNode] = Nil
+//        override protected val parenless: Boolean = true
+//        override def includes(varName: String): Boolean = false
+//
+//        override val usesVariables: Boolean = false
+//        override def cost: Int = 1
+//        override def updateValues(predicates: Predicates): ASTNode = null
+//
+//        override val predicates: Predicates = ???
+//
+//        override def computeOnContext(ctx: Map[String, Any]): Option[Any] = ???
+//      })
+//  }
 }
