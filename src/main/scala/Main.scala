@@ -19,10 +19,10 @@ object Main extends App {
   //"src/test/benchmarks/euphony-test/36462127.sl"
 //  "src/test/resources/new_benchmarks/rotate_left.examples.json"
 //  "src/test/resources/benchmarks/count_characters.examples.json"
-  "src/test/resources/new_benchmarks/count_substring.examples.json"
+//  "src/test/resources/new_benchmarks/count_substring.examples.json"
 //    "src/test/resources/new_benchmarks/check_uses_variables.examples.json"
 //    "src/test/resources/new_benchmarks/modulo_3.examples.json"
-//  "src/test/resources/new_benchmarks/divide_by_3.examples.json"
+  "src/test/resources/new_benchmarks/divide_by_3.examples.json"
   //"src/test/resources/new_benchmarks/rotate_concat.examples.json"
 //  "src/test/resources/benchmarks/abbreviate_1_ex.examples.json"
 //   "src/test/resources/old_benchmarks/string_length.examples.json"
@@ -119,16 +119,19 @@ object Main extends App {
         }
         if (program.nodeType == task.returnType) {
           if (task.predicates.allHolds(program)) {
-            if (program.usesVariables) {
-              rs = Some(
-                (task.asInstanceOf[sygus.PythonPBETask].outputVar + " = " + PostProcessor.clean(program).code,
-                  timeout * 1000 - deadline.timeLeft.toMillis.toInt))
-              println(rs.get._1, rs.get._2, program.height, program.cost, bank.values.toList.length)
-              break
-            }
-            else {
-              oeManager.classValues.remove(program.values)
-            }
+
+            rs = Some(
+              (task.asInstanceOf[sygus.PythonPBETask].outputVar + " = " + PostProcessor.clean(program).code,
+                timeout * 1000 - deadline.timeLeft.toMillis.toInt))
+            println(rs.get._1, rs.get._2, program.height, program.cost, bank.values.toList.length)
+            break
+
+//            else {
+//              oeManager.classValues.remove(program.values)
+//            }
+          }
+          else {
+            oeManager.classValues.remove(program.values)
           }
         }
 

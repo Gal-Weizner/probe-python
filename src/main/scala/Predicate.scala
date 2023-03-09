@@ -29,7 +29,7 @@ class Predicates(var predicates: List[Predicate], var num_of_examples: Int) {
   }
 
   def getNonExamplePredicates(): List[Predicate] = {
-    predicates.take(predicates.length - num_of_examples)
+    predicates.takeRight(predicates.length - num_of_examples)
   }
 
   def allHolds(program: ASTNode): Boolean = {
@@ -54,11 +54,15 @@ class ExamplePredicate (val context: Map[String, Any], val output: Option[Any]) 
 object ExamplePredicate{
   def apply(ctx: Map[String, Any], output: Option[Any]) = new ExamplePredicate(ctx, output)
 }
-class UsesVariablesPredicate (val program: ASTNode) extends Predicate
+class UsesVariablesPredicate() extends Predicate
 {
   override def observe(program: ASTNode): Option[Any] = Some(program.usesVariables)
 
   override def check(program: ASTNode): Boolean = this.observe(program).get == true
+}
+
+object UsesVariablesPredicate{
+  def apply() = new UsesVariablesPredicate()
 }
 
 

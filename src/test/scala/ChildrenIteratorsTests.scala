@@ -53,8 +53,8 @@ class ChildrenIteratorsTests extends JUnitSuite {
                   assertEquals(List("(+ x 1)", "(+ x 1)"), chit.next().map(_.code))
                   assertFalse(chit.hasNext)
                   }
-///TODO: What is the point of this?
-
+/////TODO: What is the point of this?
+//
 //     @Test def costRollingFourChildren: Unit = {
 //                  val nodes = List(
 //                  new IntNode {
