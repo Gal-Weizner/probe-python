@@ -4,7 +4,7 @@
 //import org.junit.Test
 //import org.junit.Assert._
 //import org.scalatestplus.junit.JUnitSuite
-//import vocab.{BasicVocabMaker, VocabMaker}
+//import vocab.{BasicVocabMaker, VocabMaker, PySynthesisVocab}
 //
 //class VocabTests  extends JUnitSuite{
 //  def readVocabElem(elemLine: String) = {
@@ -21,7 +21,7 @@
 //  @Test def boolLiteralMaker(): Unit =  {
 //    val vocabLine = "(ntBool Bool (false))"
 //    val parsed = readVocabElem(vocabLine)
-//    val maker: BasicVocabMaker = SygusFileTask.makeVocabMaker(parsed._1,Types.withName(parsed._2), nonTerminals)
+//    val makers: List[VocabMaker] = PySynthesisVocab.makeBasicVocab()
 //    assertEquals(0,maker.arity)
 //    assertEquals(Types.Bool,maker.returnType)
 //    val node = maker(Nil,Map.empty[String,AnyRef] :: Nil)

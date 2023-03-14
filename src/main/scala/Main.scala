@@ -3,6 +3,7 @@ package sygus
 import ast.ASTNode
 import enumeration.InputsValuesManager
 import org.antlr.v4.runtime.{BufferedTokenStream, CharStreams, RecognitionException, Token}
+import pcShell.ConsolePrints.{infoColor, showFit}
 
 import util.control.Breaks._
 import scala.concurrent.duration._
@@ -19,10 +20,10 @@ object Main extends App {
   //"src/test/benchmarks/euphony-test/36462127.sl"
 //  "src/test/resources/new_benchmarks/rotate_left.examples.json"
 //  "src/test/resources/benchmarks/count_characters.examples.json"
-//  "src/test/resources/new_benchmarks/count_substring.examples.json"
+  "src/test/resources/new_benchmarks/count_substring.examples.json"
 //    "src/test/resources/new_benchmarks/check_uses_variables.examples.json"
 //    "src/test/resources/new_benchmarks/modulo_3.examples.json"
-  "src/test/resources/new_benchmarks/divide_by_3.examples.json"
+//  "src/test/resources/new_benchmarks/divide_by_3.examples.json"
   //"src/test/resources/new_benchmarks/rotate_concat.examples.json"
 //  "src/test/resources/benchmarks/abbreviate_1_ex.examples.json"
 //   "src/test/resources/old_benchmarks/string_length.examples.json"
@@ -32,6 +33,9 @@ object Main extends App {
   //"src/test/resources/old_benchmarks/vowel_count.examples.json"
 
 
+  case class RankedProgram(program: ASTNode, rank: Double) extends Ordered[RankedProgram] {
+    override def compare(that: RankedProgram): Int = this.rank.compare(that.rank)
+  }
   case class ExpectedEOFException() extends Exception
 
 //  def interpret(task: SygusFileTask, str: String): ASTNode = {
@@ -110,6 +114,7 @@ object Main extends App {
       new enumeration.PyProbEnumerator(task.vocab, oeManager, task.predicates, false, 0, bank,
         mini)
     val deadline = timeout.seconds.fromNow
+    val ranks = mutable.ListBuffer[RankedProgram]()
 
     breakable {
       for ((program, i) <- enumerator.zipWithIndex) {
@@ -118,20 +123,24 @@ object Main extends App {
           break
         }
         if (program.nodeType == task.returnType) {
-          if (task.predicates.allHolds(program)) {
+          if (task.predicates.someHolds(program)) {
+            val rank = ProgramRanking.ranking(program, task.examples.map(_.output), task.parameters.map(_._1))
+            val ranked = RankedProgram(program, rank)
+            val ip = ranks.search(ranked)
+            if (ip.insertionPoint > 0 || ranks.length < 50)
+              ranks.insert(ip.insertionPoint, ranked)
+            if (ranks.length > 50) ranks.remove(0)
+            if (task.predicates.allHolds(program)) {
+              iprintln(program.code)
+              println(s"\rCurrent best: ${ranks.takeRight(1).map { r => showFit(task.fit(r.program)) }.mkString("")}", infoColor)
+              break
+            }
 
-            rs = Some(
-              (task.asInstanceOf[sygus.PythonPBETask].outputVar + " = " + PostProcessor.clean(program).code,
-                timeout * 1000 - deadline.timeLeft.toMillis.toInt))
-            println(rs.get._1, rs.get._2, program.height, program.cost, bank.values.toList.length)
-            break
-
-//            else {
-//              oeManager.classValues.remove(program.values)
-//            }
-          }
-          else {
-            oeManager.classValues.remove(program.values)
+//            rs = Some(
+//              (task.asInstanceOf[sygus.PythonPBETask].outputVar + " = " + PostProcessor.clean(program).code,
+//                timeout * 1000 - deadline.timeLeft.toMillis.toInt))
+//            println(rs.get._1, rs.get._2, program.height, program.cost, bank.values.toList.length)
+//            break
           }
         }
 

@@ -35,6 +35,10 @@ class Predicates(var predicates: List[Predicate], var num_of_examples: Int) {
   def allHolds(program: ASTNode): Boolean = {
     predicates.forall(pred => pred.check(program))
   }
+
+  def someHolds(program: ASTNode): Boolean = {
+    predicates.exists(pred => pred.check(program))
+  }
 }
 
 object Predicates {
@@ -58,7 +62,7 @@ class UsesVariablesPredicate() extends Predicate
 {
   override def observe(program: ASTNode): Option[Any] = Some(program.usesVariables)
 
-  override def check(program: ASTNode): Boolean = this.observe(program).get == true
+  override def check(program: ASTNode): Boolean = program.values.last.asInstanceOf[Boolean]
 }
 
 object UsesVariablesPredicate{

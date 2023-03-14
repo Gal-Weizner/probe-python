@@ -13,6 +13,10 @@ trait PySynthesisTask
   val vocab: VocabFactory
   val examples: List[Example]
   val predicates: Predicates
+//  private val parsed = new InputParser(new BufferedTokenStream(new SyGuSLexer(CharStreams.fromString(content)))).syGuS()
+//  private val synthFun = parsed.cmd().asScala.filter(cmd => cmd.getChild(1) != null && cmd.getChild(1).getText == "synth-fun").head
+//  val functionParameters = synthFun.sortedVar().asScala.map(svar => (svar.Symbol().getText -> Types.withName(svar.sort().identifier().getText))).toList
+
 
   def fit(program: ASTNode): (Int, Int)
 
@@ -113,7 +117,7 @@ object PythonPBETask
         .filter(!_._2.equals(Types.Unknown))
         .toList
     val predicates_list = examples.map(ex => ExamplePredicate(ex.input, Some(ex.output)))
-    val uses_variable_pred = UsesVariablesPredicate()
+    val uses_variable_pred = UsesVariablesPredicate() // make sure it is always the last predicate
     val predicates = Predicates(predicates = predicates_list ++ List(uses_variable_pred), num_of_examples = predicates_list.length)
     val additionalLiterals = getStringLiterals(examples)
     val vocab = PythonPBETask.vocabFactory(parameters,additionalLiterals, size, predicates)
