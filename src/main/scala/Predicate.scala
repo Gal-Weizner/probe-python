@@ -37,7 +37,7 @@ class Predicates(var predicates: List[Predicate], var num_of_examples: Int) {
   }
 
   def someHolds(program: ASTNode): Boolean = {
-    predicates.exists(pred => pred.check(program))
+    predicates.dropRight(1).exists(pred => pred.check(program))
   }
 }
 

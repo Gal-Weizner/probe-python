@@ -16,11 +16,10 @@ object ProgramRanking {
       else (found,distances)
     }
     val fittingTheData = foundResults.toDouble / expectedResults.length
-    val distanceFromData = if (expectedResults.length == foundResults) 0 else distanceFromNotFound / (expectedResults.length - foundResults)
     val relevancy = parameters.count(argName => program.includes(argName)).toDouble / parameters.length
     val height = 1.0 / (program.height + 1)
     val size = 1.0 / program.terms
-    3 * fittingTheData + 2 * relevancy + 1 * distanceFromData + size + height
+    3 * fittingTheData + 2 * relevancy + size + height
   }
   def levenshtein(str1: String, str2: String): Int = {
     val lenStr1 = str1.length

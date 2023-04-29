@@ -1,0 +1,30 @@
+{
+  "varName": "rs",
+  "env": [
+    {
+      "#": "",
+      "$": "",
+      "inp1": "'apple apples'",
+      "inp2": "'apple'",
+      "rs": "'aa'"
+    },
+    {
+      "#": "",
+      "$": "",
+      "inp1": "'an orange among the oranges is a spoiled orange'",
+      "inp2": "'orange'",
+      "rs": "'ao'"
+    },
+    {
+      "#": "",
+      "$": "",
+      "inp1": "'bqqmf apple '",
+      "inp2": "'apple'",
+      "rs": "'ba'"
+    }
+  ],
+  "exclude":
+          [
+            "len(inp1)"
+          ]
+}

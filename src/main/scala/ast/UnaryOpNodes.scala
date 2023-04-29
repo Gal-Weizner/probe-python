@@ -72,38 +72,6 @@ case class StringLength(val arg: StringNode, val predicates: Predicates) extends
 
 }
 
-case class BVNot(val arg: BVNode, val predicates: Predicates) extends UnaryOpNode[Long] with BVNode {
-  override protected val parenless: Boolean = true
-  override def doOp(x: Any): Option[Long] = x match {
-    case x: Long => Some(~x.asInstanceOf[Long])
-    case _ => wrongType(x)
-  }
-
-  override lazy val code: String = "(bvnot " + arg.code + ")"
-  override def make(x: ASTNode): UnaryOpNode[Long] =
-    new BVNot(x.asInstanceOf[BVNode], predicates)
-  override def updateValues(predicates_t: Predicates) = this.copy(arg = arg.updateValues(predicates_t: Predicates).asInstanceOf[BVNode],
-    predicates = predicates_t )
-
-
-}
-
-case class BVNeg(val arg: BVNode, val predicates: Predicates) extends UnaryOpNode[Long] with BVNode {
-  override protected val parenless: Boolean = true
-  override def doOp(x: Any): Option[Long] = x match {
-    case x: Long => Some(-x.asInstanceOf[Long])
-    case _ => wrongType(x)
-  }
-
-  override val code: String = "(bvneg " + arg.code + ")"
-  override def make(x: ASTNode): UnaryOpNode[Long] =
-    new BVNeg(x.asInstanceOf[BVNode], predicates)
-  override def updateValues(predicates_t: Predicates) = this.copy(arg = arg.updateValues(predicates_t: Predicates).asInstanceOf[BVNode],
-    predicates = predicates_t )
-
-
-}
-
 case class LNot(val arg: BoolNode, val predicates: Predicates) extends UnaryOpNode[Boolean] with BoolNode {
   override protected val parenless: Boolean = true
   override def doOp(x: Any): Option[Boolean] = x match {

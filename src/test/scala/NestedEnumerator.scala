@@ -28,15 +28,9 @@ class NestedEnumerator extends JUnitSuite {
       val node = new PyStringConcat(new PyStringLiteral("abc", 1, predicates1),
           new PyStringLiteral("def", 1, predicates1), predicates1)
       assertEquals(List("abcdef"), node.values)
-//      val predicates3 = Predicates(List(ExamplePredicate(Map("inp" -> "abcdef"), Option("")),
-//        ExamplePredicate(Map("inp" -> "abcdef"), Option("")), ExamplePredicate(Map("inp" -> "abcdef"), Option("")),
-//        ExamplePredicate(Map("inp" -> "abcdef"), Option(""))), 4)
       assertEquals(node.updateValues(predicates2).values, List("abcdef", "abcdef", "abcdef", "abcdef"))
 
       val concat = new PyStringConcat(node, new PyStringLiteral("klm", 1, predicates1), predicates1)
-//    val predicates3 = Predicates(List(ExamplePredicate(Map("inp" -> "abcdef"), Option("")),
-//      ExamplePredicate(Map("inp" -> "abcdef"), Option("")), ExamplePredicate(Map("inp" -> "abcdef"), Option("")),
-//      ExamplePredicate(Map("inp" -> "abcdef"), Option(""))), 4)
       assertEquals(List("abcdefklm"), concat.values)
       assertEquals(concat.updateValues(predicates2).values, List("abcdefklm", "abcdefklm", "abcdefklm", "abcdefklm"))
 

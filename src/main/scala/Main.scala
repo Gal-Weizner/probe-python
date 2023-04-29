@@ -3,24 +3,21 @@ package sygus
 import ast.ASTNode
 import enumeration.InputsValuesManager
 import org.antlr.v4.runtime.{BufferedTokenStream, CharStreams, RecognitionException, Token}
-import pcShell.ConsolePrints.{infoColor, showFit}
+import pcShell.ConsolePrints.{consoleEnabled, cprint, cprintln, in, infoColor, showFit}
 
 import util.control.Breaks._
 import scala.concurrent.duration._
 import trace.DebugPrints.{dprintln, iprintln}
 
 import scala.collection.mutable
-import scala.collection.mutable.ArrayBuffer
+import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 import scala.io.Source.fromFile
 
 object Main extends App {
-  val filename =
-  //"src/test/benchmarks/euphony-test/exceljet3.sl"
-  //"src/test/benchmarks/too-hard/43606446.sl"
-  //"src/test/benchmarks/euphony-test/36462127.sl"
+  val filename = {
 //  "src/test/resources/new_benchmarks/rotate_left.examples.json"
-//  "src/test/resources/benchmarks/count_characters.examples.json"
-  "src/test/resources/new_benchmarks/count_substring.examples.json"
+//  "src/test/resources/old_benchmarks/count_characters.examples.json"
+//  "src/test/resources/new_benchmarks/count_substring.examples.json"
 //    "src/test/resources/new_benchmarks/check_uses_variables.examples.json"
 //    "src/test/resources/new_benchmarks/modulo_3.examples.json"
 //  "src/test/resources/new_benchmarks/divide_by_3.examples.json"
@@ -29,6 +26,10 @@ object Main extends App {
 //   "src/test/resources/old_benchmarks/string_length.examples.json"
 //    "src/test/resources/new_benchmarks/upper.examples.json"
 //    "src/test/resources/benchmarks/empty_map.examples.json"
+//    "src/test/resources/bester_benchmarks/count_characters_wrong_example.examples.json"
+//    "src/test/resources/bester_benchmarks/string_constant_does_not_exist.examples.json"
+    "src/test/resources/new_benchmarks/get_first_characters.examples.json"
+  }
 
   //"src/test/resources/old_benchmarks/vowel_count.examples.json"
 
@@ -38,71 +39,8 @@ object Main extends App {
   }
   case class ExpectedEOFException() extends Exception
 
-//  def interpret(task: SygusFileTask, str: String): ASTNode = {
-//    val parser = new SyGuSParser(new BufferedTokenStream(new SyGuSLexer(CharStreams.fromString(str))))
-//    val parsed = parser.bfTerm()
-//    val visitor = new ASTGenerator(task)
-//    val ast = visitor.visit(parsed)
-//    if (parser.getCurrentToken.getType != Token.EOF) {
-//      throw ExpectedEOFException()
-//    }
-//    ast
-//  }
-
-//  def interpret(filename: String, str: String): Option[(ASTNode, List[Any])] = try {
-//    val task = new SygusFileTask(scala.io.Source.fromFile(filename).mkString)
-//    val ast = interpret(task, str)
-//    Some(ast, task.examples.map(_.output))
-//  } catch {
-//    case e: RecognitionException => {
-//      iprintln(s"Cannot parse program: ${e.getMessage}")
-//      None
-//    }
-//    case e: ResolutionException => {
-//      iprintln(s"Cannot resolve program: ${e.badCtx.getText}")
-//      None
-//    }
-//    case e: ExpectedEOFException => {
-//      iprintln("Expected <EOF>")
-//      None
-//    }
-//  }
-//
-//  def synthesizeSyGus(filename: String, task: SygusFileTask, sizeBased: Boolean, probBased: Boolean, timeout: Int = 20000): List[ASTNode] = {
-//    val oeManager = new InputsValuesManager()
-//
-//    val enumerator = if (!sizeBased) new enumeration.Enumerator(task.vocab, oeManager, task.examples.map(_.input))
-//    else new enumeration.ProbEnumerator(filename, task.vocab, oeManager, task, task.examples.map(_.input), probBased)
-//    val deadline = timeout.seconds.fromNow
-//    var p = List[ASTNode]()
-//    val t0 = System.currentTimeMillis / 1000
-//
-//    breakable {
-//      for ((program, i) <- enumerator.zipWithIndex) {
-//        if (program.nodeType == task.functionReturnType) {
-//          val results = task.examples.zip(program.values).map(pair => pair._1.output == pair._2)
-//          if (results.forall(identity)) {
-//            /// check for const
-//            p = List(program)
-//            iprintln(program.code)
-//            break
-//          }
-//          /////else for bester for good enough
-//        }
-//
-//
-//        if (!deadline.hasTimeLeft) {
-//          break
-//        }
-//      }
-//    }
-//    val t1 = System.currentTimeMillis / 1000
-//    iprintln(s"${t1 - t0}s")
-//    p
-//  }
-
-  def synthesizePython(task: PySynthesisTask, sizeBased: Boolean, timeout: Int = 300): Option[(String, Int)] = {
-    var rs: Option[(String, Int)] = None
+  def synthesizePython(task: PySynthesisTask, sizeBased: Boolean, timeout: Int = 40): List[RankedProgram] = {
+    var rs: List[RankedProgram] = Nil
     val oeManager = new InputsValuesManager()
     var bank = mutable.Map[Int, mutable.ArrayBuffer[ASTNode]]()
     var mini = mutable.Map[Int, mutable.ArrayBuffer[ASTNode]]()
@@ -119,7 +57,9 @@ object Main extends App {
     breakable {
       for ((program, i) <- enumerator.zipWithIndex) {
         if (!deadline.hasTimeLeft) { //TODO: fix this!
-          rs = Some(("None", timeout * 1000 - deadline.timeLeft.toMillis.toInt))
+//          rs = Some(("None", timeout * 1000 - deadline.timeLeft.toMillis.toInt))
+          rs = ranks.takeRight(5).toList
+
           break
         }
         if (program.nodeType == task.returnType) {
@@ -132,44 +72,35 @@ object Main extends App {
             if (ranks.length > 50) ranks.remove(0)
             if (task.predicates.allHolds(program)) {
               iprintln(program.code)
-              println(s"\rCurrent best: ${ranks.takeRight(1).map { r => showFit(task.fit(r.program)) }.mkString("")}", infoColor)
+              println(s"\rCurrent best: ${ranks.takeRight(1).map { r => showFit(task.fit(r.program)) }.mkString("")}")
+              rs = ranks.takeRight(5).toList
+              println(program.code, program.height, program.cost, bank.values.toList.length)
+              break
               break
             }
-
-//            rs = Some(
-//              (task.asInstanceOf[sygus.PythonPBETask].outputVar + " = " + PostProcessor.clean(program).code,
-//                timeout * 1000 - deadline.timeLeft.toMillis.toInt))
-//            println(rs.get._1, rs.get._2, program.height, program.cost, bank.values.toList.length)
-//            break
           }
         }
-
+        if (i % 1000 == 0) {
+          iprintln(i + ": " + program.code)
+          iprintln(s"\rCurrent best: ${ranks.takeRight(1).map { r => showFit(task.fit(r.program)) }.mkString("")}")
+        }
         if (trace.DebugPrints.debug) {
           val p = PostProcessor.clean(program)
           println(s"[$i] (${program.height}) ${p.code}")
         }
       }
     }
-
-    rs
+    iprintln(s"\rReturning best 5 programs:\n${rs.reverse.map(prog => (prog.program.code, prog.rank,
+      showFit(task.fit(prog.program)))).mkString("\n")}")
+    rs.map(program =>program.copy(program = PostProcessor.clean(program.program)))
   }
 
-//  def synthesize(filename: String, sizeBased: Boolean = true, probBased: Boolean = false) = {
-//    val task = new SygusFileTask(scala.io.Source.fromFile(filename).mkString)
-//    assert(task.isPBE)
-//    synthesizeSyGus(filename, task, sizeBased, probBased)
-//  }
-
-  def pySynthesize(filename: String, sizeBased: Boolean = true): Option[(String, Int)] = {
+  def pySynthesize(filename: String, sizeBased: Boolean = true): List[RankedProgram] = {
     val task: PySynthesisTask = PythonPBETask.fromString(fromFile(filename).mkString, sizeBased)
     synthesizePython(task, sizeBased)
   }
 
   trace.DebugPrints.setInfo()
-//  //SyGus or Python Benchmark
-//  if (filename.endsWith(".sl"))
-//    synthesize(filename)
-//  else
   if (filename.endsWith(".json"))
     pySynthesize(filename)
 }

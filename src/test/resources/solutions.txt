@@ -1,0 +1,7 @@
+count_characters_wrong_example.examples.json (len(inp1))
+check_uses_variables.examples.json (len(inp1))
+count_substring.examples.json (inp1.upper().count(inp2))
+divide_by_3.examples.json (inp1 // 3)
+upper.examples.json ({var: (var + var + var).upper() for var in inp})
+count_characters.examples.json ({var: inp.count(var) for var in inp})
+rotate_left.examples.json ((s + s)[count:count + len(s)])
