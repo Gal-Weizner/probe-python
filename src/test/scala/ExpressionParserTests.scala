@@ -122,21 +122,30 @@ class ExpressionParserTestsEnumerator extends JUnitSuite {
     assertEquals(6, task.vocab.leavesMakers.size)
     assertEquals(task.vocab.nodeMakers.size, 36)
     var current_code: String = ""
-//    for(i <- 1 to 50)
-//      {
-//        current_code = enumerator.next().code
-//        assertEquals(current_code, parser.parse(current_code).code)
-//      }
-
-    parser.parse("len(s)")
-//    current_code = enumerator.next().code
+    for(i <- 1 to 2000)
+      {
+        val next = enumerator.next()
+        current_code = next.code
+        val parsed = parser.parse(current_code)
+        assertEquals(current_code, parsed.code)
+      }
+//    assertEquals("\" \" + \" \" + \" \"", enumerator.next().code)
+      assertEquals(parser.parse("\" \" + \" \" + \" \"").code,"\" \" + \" \" + \" \"")
+    //    assertEquals(parser.parse("s.split(' ')[0]").code, "s.split(\" \")[0]")
+//    assertEquals(parser.parse("s.isalpha()").code, "s.isalpha()")
+//    assertEquals("s[1:3]", parser.parse("s[1:3]").code)
+//    assertEquals("s[1:3][0]", parser.parse("s[1:3][0]").code)
+//    assertEquals("(s[1:3:1])[0]", parser.parse("s[1:3:1][0]").code)
+//      assertEquals("s[::1][0]", parser.parse("s[::1][0]").code)
+//      assertEquals("s[::-1][0]", parser.parse("s[::-1][0]").code)
+    //    current_code = enumerator.next().code
 //    assertEquals(current_code, parser.parse(current_code).code)
     //  assertEquals(enumerator.next().code,"0")
     //  assertEquals(enumerator.next().code,"1")
     //  assertEquals(enumerator.next().code,"-1")
     //  assertEquals(enumerator.next().code,"3")
     //  assertEquals(enumerator.next().code,"s")
-    //  assertEquals(enumerator.next().code,"len(s)")
+//      assertEquals(enumerator.next().code,"len(s)")
     //  assertEquals(enumerator.next().code,"\" \".isalpha()")
     //  assertEquals(enumerator.next().code,"s.isalpha()")
     //  assertEquals(enumerator.next().code,"s.upper()")
@@ -174,7 +183,7 @@ class ExpressionParserTestsEnumerator extends JUnitSuite {
     //  assertEquals(enumerator.next().code,"\" \" + str(1)")
     //  assertEquals(enumerator.next().code,"\" \" + str(-1)")
     //  assertEquals(enumerator.next().code,"\" \" + str(3)")
-    //  assertEquals(enumerator.next().code,"s + s.upper()")
+      assertEquals(enumerator.next().code,"s + s.upper()")
     //  assertEquals(enumerator.next().code,"s + str(0)")
     //  assertEquals(enumerator.next().code,"s + str(1)")
     //  assertEquals(enumerator.next().code,"s + str(-1)")

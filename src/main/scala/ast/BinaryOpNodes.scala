@@ -1,5 +1,6 @@
 package ast
 
+import ast.Types.Types
 import trace.DebugPrints.eprintln
 import sygus.Predicates
 
@@ -105,21 +106,6 @@ case class IntLessThanEq(val lhs: IntNode, val rhs: IntNode, val predicates: Pre
     rhs = rhs.updateValues(predicates_t: Predicates).asInstanceOf[IntNode], predicates = predicates_t)
 }
 
-case class IntEquals(val lhs: IntNode, val rhs: IntNode, val predicates: Predicates) extends BinaryOpNode[Boolean] with BoolNode {
-  override protected val parenless: Boolean = true
-
-
-  override def doOp(l: Any, r: Any): Option[Boolean] = (l, r) match {
-    case (l: Int, r: Int) => Some(l == r)
-    case _ => wrongType(l, r)
-  }
-  override lazy val code: String = "(= " + lhs.code + " " + rhs.code + ")"
-  override def make(l: ASTNode, r: ASTNode): BinaryOpNode[Boolean] =
-    new IntEquals(l.asInstanceOf[IntNode], r.asInstanceOf[IntNode], predicates)
-  override def updateValues(predicates_t: Predicates) = this.copy(lhs = lhs.updateValues(predicates_t: Predicates).asInstanceOf[IntNode],
-    rhs = rhs.updateValues(predicates_t: Predicates).asInstanceOf[IntNode], predicates = predicates_t)
-}
-
 case class PrefixOf(val lhs: StringNode, val rhs: StringNode, val predicates: Predicates) extends BinaryOpNode[Boolean] with BoolNode {
 
   override protected val parenless: Boolean = true
@@ -147,252 +133,6 @@ case class SuffixOf(val lhs: StringNode, val rhs: StringNode, val predicates: Pr
     new SuffixOf(l.asInstanceOf[StringNode], r.asInstanceOf[StringNode], predicates)
   override def updateValues(predicates_t: Predicates) = this.copy(lhs = lhs.updateValues(predicates_t: Predicates).asInstanceOf[StringNode],
     rhs = rhs.updateValues(predicates_t: Predicates).asInstanceOf[StringNode], predicates = predicates_t)
-}
-
-case class Contains(val lhs: StringNode, val rhs: StringNode, val predicates: Predicates) extends  BinaryOpNode[Boolean] with BoolNode {
-  override protected val parenless: Boolean = true
-  override def doOp(l: Any, r: Any): Option[Boolean] = (l, r) match {
-    case (l: String, r: String) => Some(l.asInstanceOf[String].contains(r.asInstanceOf[String]))
-    case _ => wrongType(l, r)
-  }
-  override lazy val code: String = "(str.contains " + lhs.code + " " + rhs.code + ")"
-  override def make(l: ASTNode, r: ASTNode): BinaryOpNode[Boolean] =
-    new Contains(l.asInstanceOf[StringNode], r.asInstanceOf[StringNode], predicates)
-  override def updateValues(predicates_t: Predicates) = this.copy(lhs = lhs.updateValues(predicates_t: Predicates).asInstanceOf[StringNode],
-    rhs = rhs.updateValues(predicates_t: Predicates).asInstanceOf[StringNode], predicates = predicates_t)
-}
-
-case class BVAnd(val lhs: BVNode, val rhs: BVNode, val predicates: Predicates) extends BinaryOpNode[Long] with BVNode {
-  override protected val parenless: Boolean = true
-  override def doOp(l: Any, r: Any): Option[Long] = (l, r) match {
-    case (l: Long, r: Long) => Some(l & r)
-    case _ => wrongType(l, r)
-  }
-  override lazy val code: String = "(bvand " + lhs.code + " " + rhs.code + ")"
-  override def make(l: ASTNode, r: ASTNode): BinaryOpNode[Long] =
-    new BVAnd(l.asInstanceOf[BVNode], r.asInstanceOf[BVNode], predicates)
-  override def updateValues(predicates_t: Predicates) = this.copy(lhs = lhs.updateValues(predicates: Predicates).asInstanceOf[BVNode],
-    rhs = rhs.updateValues(predicates: Predicates).asInstanceOf[BVNode], predicates = predicates_t)
-}
-
-case class BVOr(val lhs: BVNode, val rhs: BVNode, val predicates: Predicates) extends BinaryOpNode[Long] with BVNode {
-  override protected val parenless: Boolean = true
-  override def doOp(l: Any, r: Any): Option[Long] = (l, r) match {
-    case (l: Long, r: Long) => Some(l | r)
-    case _ => wrongType(l, r)
-  }
-  override lazy val code: String = "(bvor " + lhs.code + " " + rhs.code + ")"
-  override def make(l: ASTNode, r: ASTNode): BinaryOpNode[Long] =
-    new BVOr(l.asInstanceOf[BVNode], r.asInstanceOf[BVNode], predicates)
-  override def updateValues(predicates_t: Predicates) = this.copy(lhs = lhs.updateValues(predicates_t: Predicates).asInstanceOf[BVNode],
-    rhs = rhs.updateValues(predicates_t: Predicates).asInstanceOf[BVNode], predicates = predicates_t)
-}
-
-case class BVXor(val lhs: BVNode, val rhs: BVNode, val predicates: Predicates) extends BinaryOpNode[Long] with BVNode {
-  override protected val parenless: Boolean = true
-  override def doOp(l: Any, r: Any): Option[Long] = (l, r) match {
-    case (l: Long, r: Long) => Some(l ^ r)
-    case _ => wrongType(l, r)
-  }
-  override lazy val code: String = "(bvxor " + lhs.code + " " + rhs.code + ")"
-  override def make(l: ASTNode, r: ASTNode): BinaryOpNode[Long] =
-    new BVXor(l.asInstanceOf[BVNode], r.asInstanceOf[BVNode], predicates)
-  override def updateValues(predicates_t: Predicates) = this.copy(lhs = lhs.updateValues(predicates_t: Predicates).asInstanceOf[BVNode],
-    rhs = rhs.updateValues(predicates_t: Predicates).asInstanceOf[BVNode], predicates = predicates_t)
-}
-
-case class BVShiftLeft(val lhs: BVNode, val rhs: BVNode, val predicates: Predicates) extends BinaryOpNode[Long] with BVNode {
-  override protected val parenless: Boolean = true
-
-  override def doOp(l: Any, r: Any): Option[Long] = (l, r) match {
-    case (l: Long, r: Long) =>
-      if (r >= 64 || r < 0) Some(0)
-      else Some(l << r)
-    case _ => wrongType(l, r)
-  }
-  override lazy val code: String = "(bvshl " + lhs.code + " " + rhs.code + ")"
-  override def make(l: ASTNode, r: ASTNode): BinaryOpNode[Long] =
-    new BVShiftLeft(l.asInstanceOf[BVNode], r.asInstanceOf[BVNode], predicates)
-  override def updateValues(predicates_t: Predicates) = this.copy(lhs = lhs.updateValues(predicates_t: Predicates).asInstanceOf[BVNode],
-    rhs = rhs.updateValues(predicates_t: Predicates).asInstanceOf[BVNode], predicates = predicates_t)
-
-}
-
-case class BVAdd(val lhs: BVNode, val rhs: BVNode, val predicates: Predicates) extends BinaryOpNode[Long] with BVNode {
-  override protected val parenless: Boolean = true
-  override def doOp(l: Any, r: Any): Option[Long] = (l, r) match {
-    case (l: Long, r: Long) => Some(l + r)
-    case _ => wrongType(l, r)
-  }
-  override lazy val code: String = "(bvadd " + lhs.code + " " + rhs.code + ")"
-  override def make(l: ASTNode, r: ASTNode): BinaryOpNode[Long] =
-    new BVAdd(l.asInstanceOf[BVNode], r.asInstanceOf[BVNode], predicates)
-  override def updateValues(predicates_t: Predicates) = this.copy(lhs = lhs.updateValues(predicates_t: Predicates).asInstanceOf[BVNode],
-    rhs = rhs.updateValues(predicates_t: Predicates).asInstanceOf[BVNode], predicates = predicates_t)
-
-}
-
-case class BVSub(val lhs: BVNode, val rhs: BVNode, val predicates: Predicates) extends BinaryOpNode[Long] with BVNode {
-  override protected val parenless: Boolean = true
-  override def doOp(l: Any, r: Any): Option[Long] = (l, r) match {
-    case (l: Long, r: Long) => Some(l - r)
-    case _ => wrongType(l, r)
-  }
-  override val code: String = "(bvsub " + lhs.code + " " + rhs.code + ")"
-  override def make(l: ASTNode, r: ASTNode): BinaryOpNode[Long] =
-    new BVSub(l.asInstanceOf[BVNode], r.asInstanceOf[BVNode], predicates)
-  override def updateValues(predicates_t: Predicates) = this.copy(lhs = lhs.updateValues(predicates_t: Predicates).asInstanceOf[BVNode],
-    rhs = rhs.updateValues(predicates_t: Predicates).asInstanceOf[BVNode], predicates = predicates_t)
-
-}
-
-case class BVSDiv(val lhs: BVNode, val rhs: BVNode, val predicates: Predicates) extends BinaryOpNode[Long] with BVNode {
-  override protected val parenless: Boolean = true
-  override def doOp(l: Any, r: Any): Option[Long] = (l, r) match {
-    case (l: Long, r: Long) => Some(l / r)
-    case _ => wrongType(l, r)
-  }
-  override val code: String = "(bvsdiv " + lhs.code + " " + rhs.code + ")"
-  override def make(l: ASTNode, r: ASTNode): BinaryOpNode[Long] =
-    new BVSDiv(l.asInstanceOf[BVNode], r.asInstanceOf[BVNode], predicates)
-  override def updateValues(predicates_t: Predicates) = this.copy(lhs = lhs.updateValues(predicates_t: Predicates).asInstanceOf[BVNode],
-    rhs = rhs.updateValues(predicates_t: Predicates).asInstanceOf[BVNode], predicates = predicates_t)
-
-}
-
-case class BVUDiv(val lhs: BVNode, val rhs: BVNode, val predicates: Predicates) extends BinaryOpNode[Long] with BVNode {
-  override protected val parenless: Boolean = true
-
-  override def doOp(l: Any, r: Any): Option[Long] = (l, r) match {
-    case (l: Long, r: Long) => Some(java.lang.Long.divideUnsigned(l.asInstanceOf[Long],r.asInstanceOf[Long]))
-    case _ => wrongType(l, r)
-  }
-
-  override val code: String = "(bvudiv " + lhs.code + " " + rhs.code + ")"
-  override def make(l: ASTNode, r: ASTNode): BinaryOpNode[Long] =
-    new BVUDiv(l.asInstanceOf[BVNode], r.asInstanceOf[BVNode], predicates)
-  override def updateValues(predicates_t: Predicates) = this.copy(lhs = lhs.updateValues(predicates_t: Predicates).asInstanceOf[BVNode],
-    rhs = rhs.updateValues(predicates_t: Predicates).asInstanceOf[BVNode], predicates = predicates_t)
-
-}
-
-case class BVMul(val lhs: BVNode, val rhs: BVNode, val predicates: Predicates) extends BinaryOpNode[Long] with BVNode {
-  override protected val parenless: Boolean = true
-  override def doOp(l: Any, r: Any): Option[Long] = (l, r) match {
-    case (l: Long, r: Long) => Some(l * r)
-    case _ => wrongType(l, r)
-  }
-  override val code: String = "(bvmul " + lhs.code + " " + rhs.code + ")"
-  override def make(l: ASTNode, r: ASTNode): BinaryOpNode[Long] =
-    new BVMul(l.asInstanceOf[BVNode], r.asInstanceOf[BVNode], predicates)
-
-  override def updateValues(predicates_t: Predicates) = this.copy(lhs = lhs.updateValues(predicates_t: Predicates).asInstanceOf[BVNode],
-    rhs = rhs.updateValues(predicates_t: Predicates).asInstanceOf[BVNode], predicates = predicates_t)
-
-}
-
-case class BVShrLogical(val lhs: BVNode, val rhs: BVNode, val predicates: Predicates) extends BinaryOpNode[Long] with BVNode {
-  override protected val parenless: Boolean = true
-
-  override def doOp(l: Any, r: Any): Option[Long] = (l, r) match {
-    case (l: Long, r: Long) => Some(l >>> r)
-    case _ => wrongType(l, r)
-  }
-  override lazy val code: String = "(bvlshr " + lhs.code + " " + rhs.code + ")"
-  override def make(l: ASTNode, r: ASTNode): BinaryOpNode[Long] =
-    new BVShrLogical(l.asInstanceOf[BVNode], r.asInstanceOf[BVNode], predicates)
-  override def updateValues(predicates_t: Predicates) = this.copy(lhs = lhs.updateValues(predicates_t: Predicates).asInstanceOf[BVNode],
-    rhs = rhs.updateValues(predicates_t: Predicates).asInstanceOf[BVNode], predicates = predicates_t)
-
-}
-
-case class BVShrArithmetic(val lhs: BVNode, val rhs: BVNode, val predicates: Predicates) extends BinaryOpNode[Long] with BVNode {
-  override protected val parenless: Boolean = true
-  override def doOp(l: Any, r: Any): Option[Long] = (l, r) match {
-    case (l: Long, r: Long) => Some(l >> r)
-    case _ => wrongType(l, r)
-  }
-  override lazy val code: String = "(bvashr " + lhs.code + " " + rhs.code + ")"
-  override def make(l: ASTNode, r: ASTNode): BinaryOpNode[Long] =
-    new BVShrArithmetic(l.asInstanceOf[BVNode], r.asInstanceOf[BVNode], predicates)
-  override def updateValues(predicates_t: Predicates) = this.copy(lhs = lhs.updateValues(predicates_t: Predicates).asInstanceOf[BVNode],
-    rhs = rhs.updateValues(predicates_t: Predicates).asInstanceOf[BVNode], predicates = predicates_t)
-
-}
-
-case class BVEquals(val lhs: BVNode, val rhs: BVNode, val predicates: Predicates) extends BinaryOpNode[Boolean] with BoolNode {
-  override protected val parenless: Boolean = true
-  override def doOp(l: Any, r: Any): Option[Boolean] = (l, r) match {
-    case (l: Long, r: Long) => Some(l == r)
-    case _ => wrongType(l, r)
-  }
-  override val code: String = "(= " + lhs.code + " " + rhs.code + ")"
-  override def make(l: ASTNode, r: ASTNode): BinaryOpNode[Boolean] =
-    new BVEquals(l.asInstanceOf[BVNode], r.asInstanceOf[BVNode], predicates)
-  override def updateValues(predicates_t: Predicates) = this.copy(lhs = lhs.updateValues(predicates_t: Predicates).asInstanceOf[BVNode],
-    rhs = rhs.updateValues(predicates_t: Predicates).asInstanceOf[BVNode], predicates = predicates_t)
-
-}
-
-case class LAnd(val lhs: BoolNode, val rhs: BoolNode, val predicates: Predicates) extends BinaryOpNode[Boolean] with BoolNode {
-  override protected val parenless: Boolean = true
-  override def doOp(l: Any, r: Any): Option[Boolean] = (l, r) match {
-    case (l: Boolean, r: Boolean) => Some(l.asInstanceOf[Boolean] && r.asInstanceOf[Boolean])
-    case _ => wrongType(l, r)
-  }
-
-  override val code: String = "(and " + lhs.code + " " + rhs.code + ")"
-  override def make(l: ASTNode, r: ASTNode): BinaryOpNode[Boolean] =
-    new LAnd(l.asInstanceOf[BoolNode], r.asInstanceOf[BoolNode], predicates)
-  override def updateValues(predicates_t: Predicates) = this.copy(lhs = lhs.updateValues(predicates_t: Predicates).asInstanceOf[BoolNode],
-    rhs = rhs.updateValues(predicates_t: Predicates).asInstanceOf[BoolNode], predicates = predicates_t)
-
-
-}
-
-case class LOr(val lhs: BoolNode, val rhs: BoolNode, val predicates: Predicates) extends BinaryOpNode[Boolean] with BoolNode {
-  override protected val parenless: Boolean = true
-  override def doOp(l: Any, r: Any): Option[Boolean] = (l, r) match {
-    case (l: Boolean, r: Boolean) => Some(l.asInstanceOf[Boolean] || r.asInstanceOf[Boolean])
-    case _ => wrongType(l, r)
-  }
-  override val code: String = "(or " + lhs.code + " " + rhs.code + ")"
-  override def make(l: ASTNode, r: ASTNode): BinaryOpNode[Boolean] =
-    new LOr(l.asInstanceOf[BoolNode], r.asInstanceOf[BoolNode], predicates)
-  override def updateValues(predicates_t: Predicates) = this.copy(lhs = lhs.updateValues(predicates_t: Predicates).asInstanceOf[BoolNode],
-    rhs = rhs.updateValues(predicates_t: Predicates).asInstanceOf[BoolNode], predicates = predicates_t)
-
-
-}
-
-case class BVSRem(val lhs: BVNode, val rhs: BVNode, val predicates: Predicates) extends BinaryOpNode[Long] with BVNode {
-  override protected val parenless: Boolean = true
-  override def doOp(l: Any, r: Any): Option[Long] = (l, r) match {
-    case (l: Long, r: Long) => Some(l.asInstanceOf[Long] % r.asInstanceOf[Long])
-    case _ => wrongType(l, r)
-  }
-  override val code: String = "(bvsrem " + lhs.code + " " + rhs.code + ")"
-  override def make(l: ASTNode, r: ASTNode): BinaryOpNode[Long] =
-    new BVSRem(l.asInstanceOf[BVNode], r.asInstanceOf[BVNode], predicates)
-  override def updateValues(predicates_t: Predicates) = this.copy(lhs = lhs.updateValues(predicates_t: Predicates).asInstanceOf[BVNode],
-    rhs = rhs.updateValues(predicates_t: Predicates).asInstanceOf[BVNode], predicates = predicates_t)
-
-}
-
-case class BVURem(val lhs: BVNode, val rhs: BVNode, val predicates: Predicates) extends BinaryOpNode[Long] with BVNode {
-  override protected val parenless: Boolean = true
-  override def doOp(l: Any, r: Any): Option[Long] = (l, r) match {
-    case (l: Long, r: Long) => Some(java.lang.Long.remainderUnsigned(l.asInstanceOf[Long], r.asInstanceOf[Long]))
-    case _ => wrongType(l, r)
-  }
-
-  override val code: String = "(bvurem " + lhs.code + " " + rhs.code + ")"
-  override def make(l: ASTNode, r: ASTNode): BinaryOpNode[Long] =
-    new BVURem(l.asInstanceOf[BVNode], r.asInstanceOf[BVNode], predicates)
-  override def updateValues(predicates_t: Predicates) = this.copy(lhs = lhs.updateValues(predicates_t: Predicates).asInstanceOf[BVNode],
-    rhs = rhs.updateValues(predicates_t: Predicates).asInstanceOf[BVNode], predicates = predicates_t)
-
-
 }
 
 case class PyLessThanEq(val lhs: PyIntNode, val rhs: PyIntNode, val predicates: Predicates) extends BinaryOpNode[Boolean] with PyBoolNode {
@@ -464,6 +204,38 @@ case class PyMapGet(val lhs: MapNode[String,Int], val rhs: PyStringNode, val pre
 
 }
 
+abstract class ListLookup[T](lhs: ListNode[T], rhs: PyIntNode, predicates: Predicates) extends BinaryOpNode[T] {
+  override protected val parenless: Boolean = true
+  override val nodeType: Types = lhs.childType
+  override val code: String = s"${lhs.parensIfNeeded}[${rhs.code}]"
+
+  override def doOp(l: Any, r: Any): Option[T] = (l, r) match {
+    case (lst: List[T], idx: Int) =>
+      if (idx >= 0 && idx < lst.length) Some(lst(idx)) else None
+    case _ => wrongType(l, r)
+  }
+}
+case class PyStringListLookup(lhs: ListNode[PyStringNode], rhs: PyIntNode, predicates: Predicates)
+  extends ListLookup[PyStringNode](lhs, rhs, predicates) with PyStringNode {
+  override protected val parenless: Boolean = true
+  override val code: String = s"${lhs.parensIfNeeded}[${rhs.code}]"
+
+  override def make(lhs: ASTNode, rhs: ASTNode): ListLookup[PyStringNode] =
+    PyStringListLookup(lhs.asInstanceOf[ListNode[PyStringNode]], rhs.asInstanceOf[PyIntNode], predicates)
+  override def updateValues(predicates_t: Predicates) = copy(predicates = predicates_t)
+
+}
+
+case class PyIntListLookup(lhs: ListNode[PyIntNode], rhs: PyIntNode, predicates: Predicates)
+  extends ListLookup[PyIntNode](lhs, rhs, predicates) with PyIntNode {
+  override protected val parenless: Boolean = true
+  override val code: String = s"${lhs.parensIfNeeded}[${rhs.code}]"
+
+  override def make(lhs: ASTNode, rhs: ASTNode): ListLookup[PyIntNode] =
+    PyIntListLookup(lhs.asInstanceOf[ListNode[PyIntNode]], rhs.asInstanceOf[PyIntNode], predicates)
+  override def updateValues(predicates_t: Predicates) = copy(predicates = predicates_t)
+
+}
 
 case class PyIntAddition(val lhs: PyIntNode, val rhs: PyIntNode, val predicates: Predicates) extends BinaryOpNode[Int] with PyIntNode
 {

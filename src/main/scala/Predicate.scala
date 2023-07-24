@@ -1,12 +1,14 @@
 package sygus
-import ast.ASTNode
+import ast.{ASTNode, LiteralNode, Types}
 
+import scala.collection.mutable
 import scala.reflect.internal.util.TriState.{False, True}
 
 trait Predicate {
 
   def observe(program:ASTNode): Option[Any]
   def check(program: ASTNode): Boolean
+//  def set_index(): Any
 }
 
 class Predicates(var predicates: List[Predicate], var num_of_examples: Int) {
@@ -18,6 +20,11 @@ class Predicates(var predicates: List[Predicate], var num_of_examples: Int) {
       else start += l.size
     (-1, -1)
   }
+
+//  def set_index() =
+//    {
+//
+//    }
 
   def getExampleValue(values: List[Any], ctx: Map[String, Any]): Any = {
     val res = predicates.zipWithIndex.find { case (p, _) => p.isInstanceOf[ExamplePredicate] && p.asInstanceOf[ExamplePredicate].context == ctx }
@@ -69,5 +76,71 @@ object UsesVariablesPredicate{
   def apply() = new UsesVariablesPredicate()
 }
 
+class RetainPredicate(expression_tree: ASTNode) extends Predicate
+{
+  val (leaves_map, v_map) = assign_numbers_to_tree_nodes(expression_tree)
+
+  def assign_numbers_to_tree_nodes_rec(node: ASTNode, leaves_map: mutable.Map[ASTNode, Int],
+                                       v_map: mutable.Map[(Class[_], List[Int]), Int],
+                                       counter: Int): Int = {
+    if (node.children.isEmpty) {
+      if(!leaves_map.contains(node))
+        {
+          leaves_map += node -> counter
+          counter + 1
+        }
+      else
+        {
+          counter
+        }
+    }
+    else {
+      var current_counter = counter
+      for(child <- node.children){
+        current_counter = assign_numbers_to_tree_nodes_rec(child, leaves_map, v_map, current_counter)
+      }
+      val children_vector = node.children.map(c=>idOf_internal(c, leaves_map.toMap, v_map.toMap)).toList
+      if(!v_map.contains((node.getClass, children_vector))){
+        v_map += (node.getClass, children_vector) -> current_counter
+        current_counter + 1
+      }
+      else
+        {
+          current_counter
+        }
+    }
+  }
+
+  def assign_numbers_to_tree_nodes(node: ASTNode): (Map[ASTNode, Int], Map[(Class[_], List[Int]), Int]) = {
+    val v_map = mutable.Map[(Class[_], List[Int]), Int]()
+    val leaves_map = mutable.Map[ASTNode, Int]()
+    var current_counter = 2
+    for (child <- node.children) {
+      current_counter = assign_numbers_to_tree_nodes_rec(child, leaves_map, v_map, current_counter)
+    }
+    v_map += (node.getClass, node.children.map(c=>idOf_internal(c, leaves_map.toMap, v_map.toMap)).toList) -> 1
+    (leaves_map.toMap, v_map.toMap)
+  }
+
+  def idOf(node: ASTNode): Int = {
+    idOf_internal(node, leaves_map, v_map)
+  }
+
+  def idOf_internal(node: ASTNode, leaves_map:Map[ASTNode, Int],
+                    v_map: Map[(Class[_], List[Int]), Int]): Int = {
+    if (node.children.isEmpty)
+    {
+      leaves_map(node)
+    }
+    else
+      {
+        v_map((node.getClass, node.children.map(c=>idOf_internal(c, leaves_map, v_map)).toList))
+      }
+  }
+
+  override def observe(program: ASTNode): Option[Int] = ???
+
+  override def check(program: ASTNode): Boolean = program.values.last.asInstanceOf[Boolean]
+}
 
 
