@@ -6,7 +6,7 @@ import sygus.{ExamplePredicate, PostProcessor, Predicates}
 
 class PostprocessorTests  extends JUnitSuite{
   @Test def constantFoldIntOperation: Unit = {
-    val predicates = Predicates(List(ExamplePredicate(Map("inp"-> ""), Option(""))), 1)
+    val predicates = Predicates(List(ExamplePredicate(Map("inp"-> ""), Option(""),0)), 1)
     val expr = new PyIntAddition(
       new PyIntSubtraction(
         new PyIntDivision(new PyIntLiteral(2, 1, predicates),
@@ -17,7 +17,7 @@ class PostprocessorTests  extends JUnitSuite{
     assertEquals("9",postProcessed.code)
   }
   @Test def constantFoldIntOperationOneVar1: Unit = {
-    val predicates = Predicates(List(ExamplePredicate(Map("x" -> 2), Option(""))), 1)
+    val predicates = Predicates(List(ExamplePredicate(Map("x" -> 2), Option(""),0)), 1)
     val x = new PyIntVariable("x",predicates)
     val expr = new PyIntAddition(
       new PyIntSubtraction(
@@ -28,7 +28,7 @@ class PostprocessorTests  extends JUnitSuite{
     assertEquals("x // 3 - -1 + 8",postProcessed.code)
   }
   @Test def constantFoldIntOperationOneVar2: Unit = {
-    val predicates = Predicates(List(ExamplePredicate(Map("x" -> 2), Option(""))), 1)
+    val predicates = Predicates(List(ExamplePredicate(Map("x" -> 2), Option(""),0)), 1)
     val x = new PyIntVariable("x",predicates)
     val expr = new PyIntAddition(
       new PyIntSubtraction(
@@ -39,7 +39,7 @@ class PostprocessorTests  extends JUnitSuite{
     assertEquals("2 // x - -1 + 8",postProcessed.code)
   }
   @Test def constantFoldIntOperationOneVar3: Unit = {
-    val predicates = Predicates(List(ExamplePredicate(Map("x" -> 2), Option(""))), 1)
+    val predicates = Predicates(List(ExamplePredicate(Map("x" -> 2), Option(""),0)), 1)
     val x = new PyIntVariable("x", predicates)
     val expr = new PyIntAddition(
       new PyIntSubtraction(
@@ -50,7 +50,7 @@ class PostprocessorTests  extends JUnitSuite{
     assertEquals("0 - x + 8",postProcessed.code)
   }
   @Test def constantFoldIntOperationOneVar4: Unit = {
-    val predicates = Predicates(List(ExamplePredicate(Map("x" -> 2), Option(""))), 1)
+    val predicates = Predicates(List(ExamplePredicate(Map("x" -> 2), Option(""),0)), 1)
     val x = new PyIntVariable("x",predicates)
     val expr = new PyIntAddition(
       new PyIntSubtraction(
@@ -61,7 +61,7 @@ class PostprocessorTests  extends JUnitSuite{
     assertEquals("1 + x",postProcessed.code)
   }
   @Test def constantFoldStringToInt: Unit = {
-    val predicates = Predicates(List(ExamplePredicate(Map("x" -> 2), Option(""))), 1)
+    val predicates = Predicates(List(ExamplePredicate(Map("x" -> 2), Option(""),0)), 1)
     val expr = new PyIntAddition(
       new PyIntSubtraction(
         new PyIntDivision(new PyIntLiteral(2, 1, predicates),
@@ -72,25 +72,25 @@ class PostprocessorTests  extends JUnitSuite{
     assertEquals("9",postProcessed.code)
   }
   @Test def constantFoldingStrings1: Unit = {
-    val predicates = Predicates(List(ExamplePredicate(Map("x" -> 2), Option(""))), 1)
+    val predicates = Predicates(List(ExamplePredicate(Map("x" -> 2), Option(""),0)), 1)
     val expr = new PyIntToString(new PyIntLiteral(-8,1, predicates), predicates)
     assertEquals("\"-8\"",PostProcessor.clean(expr).code)
   }
   @Test def constantFoldingStrings1WithVar: Unit = {
-    val predicates = Predicates(List(ExamplePredicate(Map("x" -> 8), Option(""))), 1)
+    val predicates = Predicates(List(ExamplePredicate(Map("x" -> 8), Option(""),0)), 1)
     val x = new PyIntVariable("x",predicates)
     val expr = new PyIntToString(x, predicates)
     assertEquals("str(x)",PostProcessor.clean(expr).code)
   }
 
   @Test def constantFoldingStrings2: Unit = {
-    val predicates = Predicates(List(ExamplePredicate(Map("x" -> 8), Option(""))), 1)
+    val predicates = Predicates(List(ExamplePredicate(Map("x" -> 8), Option(""),0)), 1)
     val expr = new PyFind(new PyStringLiteral("",1, predicates),
       new PyStringLiteral(" ",1, predicates), predicates)
     assertEquals("-1",PostProcessor.clean(expr).code)
   }
   @Test def constantFoldingStrings2Var: Unit = {
-    val predicates = Predicates(List(ExamplePredicate(Map("x" -> "8"), Option(""))), 1)
+    val predicates = Predicates(List(ExamplePredicate(Map("x" -> "8"), Option(""),0)), 1)
     val x = new PyStringVariable("x", predicates)
     val expr = new PyFind(x,new PyStringLiteral(" ",1, predicates), predicates)
     assertEquals("x.find(\" \")",PostProcessor.clean(expr).code)
@@ -98,7 +98,7 @@ class PostprocessorTests  extends JUnitSuite{
     assertEquals("\"\".find(x)",PostProcessor.clean(expr2).code)
   }
   @Test def constantFoldingStrings3: Unit = {
-    val predicates = Predicates(List(ExamplePredicate(Map("x" -> ""), Option(""))), 1)
+    val predicates = Predicates(List(ExamplePredicate(Map("x" -> ""), Option(""),0)), 1)
     val expr = new PyStringConcat(
       new PyBinarySubstring(
         new PyStringLiteral("abc",1, predicates),
@@ -111,7 +111,7 @@ class PostprocessorTests  extends JUnitSuite{
     assertEquals("\"bbc\"",PostProcessor.clean(expr).code)
   }
   @Test def constantFoldingBoolean1: Unit = {
-    val predicates = Predicates(List(ExamplePredicate(Map("x" -> ""), Option(""))), 1)
+    val predicates = Predicates(List(ExamplePredicate(Map("x" -> ""), Option(""),0)), 1)
     val expr = new PyLessThanEq(new PyIntLiteral(1,1, predicates),
       new PyIntLiteral(2,1, predicates), predicates)
     assertEquals("True",PostProcessor.clean(expr).code)
@@ -121,7 +121,7 @@ class PostprocessorTests  extends JUnitSuite{
   }
 
   @Test def constantFoldingBoolean1WithVar: Unit = {
-    val predicates = Predicates(List(ExamplePredicate(Map("n" -> 2), Option(""))), 1)
+    val predicates = Predicates(List(ExamplePredicate(Map("n" -> 2), Option(""),0)), 1)
     val n = new PyIntVariable("n", predicates)
     val expr = new PyLessThanEq(n, new PyIntLiteral(2,1, predicates), predicates)
     assertEquals("n <= 2",PostProcessor.clean(expr).code)
@@ -130,7 +130,7 @@ class PostprocessorTests  extends JUnitSuite{
   }
 
   @Test def constantFoldingBoolean2: Unit = {
-    val predicates = Predicates(List(ExamplePredicate(Map("x" -> ""), Option(""))), 1)
+    val predicates = Predicates(List(ExamplePredicate(Map("x" -> ""), Option(""),0)), 1)
     val expr = new PyContains(new PyStringLiteral("abc",1, predicates),
       new PyStringLiteral("",1, predicates), predicates)
     assertEquals("False",PostProcessor.clean(expr).code)

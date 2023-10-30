@@ -8,7 +8,7 @@ abstract class LiteralNode[T](numExamples: Int) extends ASTNode{
   val value: T
 
   override def computeOnContext(ctx: Map[String, Any]) = Some(value)
-  override val children: Iterable[ASTNode] = Iterable.empty
+  override def children: Iterable[ASTNode] = Iterable.empty
   def includes(varName: String): Boolean = false
   override lazy val usesVariables: Boolean = false
 

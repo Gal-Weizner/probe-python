@@ -14,7 +14,7 @@ trait ASTNode {
   val code: String
   val height: Int
   val terms: Int
-  val children: Iterable[ASTNode]
+  def children: Iterable[ASTNode]
   def computeOnContext(ctx: Map[String, Any]): Option[Any]
   def includes(varName: String): Boolean
   protected val parenless: Boolean

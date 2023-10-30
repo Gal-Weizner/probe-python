@@ -7,7 +7,7 @@ abstract class VariableNode[T](predicates: Predicates) extends ASTNode
 {
   override lazy val code: String = name
   override val height: Int = 0
-  override val children: Iterable[ASTNode] = Iterable.empty
+  override def children: Iterable[ASTNode] = Iterable.empty
   val terms = 1
   val name: String
   override protected val parenless: Boolean = true

@@ -4,7 +4,7 @@ import java.io.FileOutputStream
 import ast.Types.Types
 import ast._
 import enumeration.{InputsValuesManager, PyEnumerator, PyProbEnumerator}
-import sygus.{ExamplePredicate, Predicates}
+import sygus.{ExamplePredicate, ExcludePredicate, Predicates, RetainPredicate, UsesVariablesPredicate}
 import trace.DebugPrints
 
 import scala.collection.mutable
@@ -228,16 +228,17 @@ abstract class ListCompVocabMaker(inputListType: Types, outputListType: Types, s
       val lst = listIter.next()
       if (lst.values.head.asInstanceOf[List[_]].nonEmpty) {
         this.currList = lst
-//        val example_predicates = for (predicate <- this.predicates.getExamplePredicates();
-//                                      value <- this.currList.values.take(this.predicates.num_of_examples) ;
-//                                      value <-value.toString.toList) yield {
-//          predicate.updatePredicate(this.varName, value)
-//        }
-        val example_predicates = for ((predicate, listVal) <- this.predicates.getExamplePredicates().zip(lst.values.take(this.predicates.num_of_examples));
+        val example_predicates = for (((predicate, listVal), idx) <- this.predicates.getExamplePredicates().zip(lst.values.take(this.predicates.num_of_examples)).zipWithIndex;
                                       elem <- listVal.asInstanceOf[Iterable[Any]]) yield {
-          predicate.updatePredicate(varName, elem.toString)
+          predicate.updatePredicate(varName, elem.toString, idx)
         }
-        val new_predicates = example_predicates ++ this.predicates.getNonExamplePredicates()
+        val new_num_examples = example_predicates.length
+        val new_non_example_predicates_list = for ((pred, idx) <- predicates.getNonExamplePredicates().zipWithIndex) yield pred match {
+          case predicate: RetainPredicate => predicate.clonePredicate(idx + new_num_examples)
+          case predicate: ExcludePredicate => predicate.clonePredicate(idx + new_num_examples)
+          case predicate: UsesVariablesPredicate => new UsesVariablesPredicate(idx + new_num_examples)
+        }
+        val new_predicates = example_predicates ++ new_non_example_predicates_list
         val newPredicatesClass = new Predicates(new_predicates, example_predicates.length)
         val oeValuesManager = new InputsValuesManager()
         this.enumerator = if (!size) {

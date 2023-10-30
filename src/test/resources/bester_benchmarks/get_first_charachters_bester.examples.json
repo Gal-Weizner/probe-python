@@ -1,4 +1,5 @@
 {
+  "mistake": "Wrong second character",
   "varName": "rs",
   "env": [
     {
@@ -6,21 +7,21 @@
       "$": "",
       "inp1": "'apple apples'",
       "inp2": "'apple'",
-      "rs": "2"
+      "rs": "'aa'"
     },
     {
       "#": "",
       "$": "",
       "inp1": "'an orange among the oranges is a spoiled orange'",
       "inp2": "'orange'",
-      "rs": "3"
+      "rs": "'ao'"
     },
     {
       "#": "",
       "$": "",
       "inp1": "'bqqmf apple '",
       "inp2": "'apple'",
-      "rs": "122"
+      "rs": "'bq'"
     }
   ]
 }

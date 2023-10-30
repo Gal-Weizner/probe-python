@@ -40,6 +40,6 @@ object ConsolePrints {
     out.println(coloredString)
   }
 
-  def showFit(fit: (Int, Int)): String = s"[${fit._1}/${fit._2}]"
+  def showFit(fit: (Int, Int, Int)): String = s"[${fit._1}/${fit._2}, ${fit._3}]"
 
 }

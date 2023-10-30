@@ -34,13 +34,15 @@ trait MapCompNode[K,V] extends MapNode[K,V]
 
   override val height: Int = 1 + Math.max(list.height, value.height)
   override val terms: Int = 1 + list.terms + value.terms
-  override val children: Iterable[ASTNode] = List(list, value)
+  override def children: Iterable[ASTNode] = List(list, value)
   override protected val parenless: Boolean = true
   override val code: String = s"{${key.code}: ${value.code} for $varName in ${list.code}}"
   override def includes(varName: String): Boolean =
     varName.equals(this.varName) || list.includes(varName) || key.includes(varName) || value.includes(varName)
   override lazy val usesVariables: Boolean = list.usesVariables || key.usesVariables || value.usesVariables
   override def updateValues(predicates: Predicates) = ???
+
+
 
 
 }

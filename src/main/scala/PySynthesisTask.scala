@@ -6,6 +6,8 @@ import net.liftweb.json.JsonAST.{JArray, JObject}
 import net.liftweb.json.{JsonParser, prettyRender}
 import vocab._
 
+import scala.language.postfixOps
+
 trait PySynthesisTask
 {
   val returnType: ast.Types.Value
@@ -18,7 +20,7 @@ trait PySynthesisTask
 //  val functionParameters = synthFun.sortedVar().asScala.map(svar => (svar.Symbol().getText -> Types.withName(svar.sort().identifier().getText))).toList
 
 
-  def fit(program: ASTNode): (Int, Int)
+  def fit(program: ASTNode): (Int, Int, Int)
 
   override def toString: String =
   {
@@ -48,12 +50,13 @@ class PythonPBETask(
                      val predicates: Predicates,
                      val outputVar: String) extends PySynthesisTask
 {
-  override def fit(program: ASTNode): (Int, Int) =
+  override def fit(program: ASTNode): (Int, Int, Int) =
   {
     val expectedResults = examples.map(_.output)
     val k = program.values.zip(expectedResults).count(pair => pair._1 == pair._2)
+    val preds = program.values.takeRight(program.values.length - predicates.num_of_examples).count(pred => pred == true)
     val n = expectedResults.length
-    (k, n)
+    (k, n, preds)
   }
 }
 
@@ -105,7 +108,6 @@ object PythonPBETask
     val examples = input("env").asInstanceOf[List[Map[String,Any]]]
       .map(cleanupInputs)
       .map(env => Example(env.filter(_._1 != outputVarName), env(outputVarName)))
-
     val returnType = getTypeOfAll(examples.map(_.output))
     val parameters =
       examples.head.input
@@ -116,13 +118,32 @@ object PythonPBETask
         // TODO Handle empty sets
         .filter(!_._2.equals(Types.Unknown))
         .toList
-    val predicates_list = examples.map(ex => ExamplePredicate(ex.input, Some(ex.output)))
-    val uses_variable_pred = UsesVariablesPredicate() // make sure it is always the last predicate
-    val predicates = Predicates(predicates = predicates_list ++ List(uses_variable_pred), num_of_examples = predicates_list.length)
+    val example_predicates_list = examples.zipWithIndex.map{
+      case (ex,idx) => ExamplePredicate(ex.input, Some(ex.output), idx)}
+    val temp_predicates = Predicates(predicates = example_predicates_list , num_of_examples = example_predicates_list.length)
+    var retains_list: List[RetainPredicate] = Nil
+    var excludes_list: List[ExcludePredicate] = Nil
+    val num_examples = example_predicates_list.length
+    if (input.contains("retain")) {
+      retains_list = input("retain").asInstanceOf[List[Map[String, String]]].map(
+        retain_exp => new RESLParser(temp_predicates, retain_exp("type")).parse(retain_exp("expression"))).zipWithIndex.map {
+        case ((l_map, v_map), idx) => RetainPredicate(idx + num_examples, l_map.asInstanceOf[Map[(Class[_], Any), Int]],
+          v_map.asInstanceOf[Map[(Class[_], List[Int]), Int]])
+      }
+    }
+    if (input.contains("exclude")) {
+        excludes_list = input("exclude").asInstanceOf[List[Map[String, String]]].map(
+        exclude_exp => new RESLParser(temp_predicates, exclude_exp("type")).parse(exclude_exp("expression"))).zipWithIndex.map {
+        case ((l_map, v_map), idx) => ExcludePredicate(idx + + retains_list.length + num_examples,
+          l_map.asInstanceOf[Map[(Class[_], Any), Int]], v_map.asInstanceOf[Map[(Class[_], List[Int]), Int]])
+      }
+    }
+    val uses_variable_pred = UsesVariablesPredicate(num_examples + retains_list.length + excludes_list.length) // make sure it is always the last predicate
+    val final_predicates = Predicates(example_predicates_list ++ retains_list ++ excludes_list ++ List(uses_variable_pred), example_predicates_list.length)
     val additionalLiterals = getStringLiterals(examples)
-    val vocab = PythonPBETask.vocabFactory(parameters,additionalLiterals, size, predicates)
+    val vocab = PythonPBETask.vocabFactory(parameters,additionalLiterals, size, final_predicates)
 
-    val rs = new PythonPBETask(returnType, parameters, vocab, examples,predicates, outputVarName)
+    val rs = new PythonPBETask(returnType, parameters, vocab, examples, final_predicates, outputVarName)
     trace.DebugPrints.dprintln(s"Solving Python PBE Task:\n\n$rs")
     rs
   }

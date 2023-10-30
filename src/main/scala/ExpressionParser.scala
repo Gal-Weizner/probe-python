@@ -9,6 +9,10 @@ import ast.Types.Types
 import scala.collection.JavaConverters._
 import scala.collection.mutable
 
+
+/// TODO: When we have "var" or inner variable, change the order of children visited and visit first
+/// the list/dict in order to infer the type of the var
+
 class ExpressionParser(val predicates: Predicates) extends Python3BaseVisitor[ASTNode] {
   def parse(code: String): ASTNode = {
     val lexer = new Python3Lexer(CharStreams.fromString(code.trim))
@@ -86,12 +90,17 @@ class ExpressionParser(val predicates: Predicates) extends Python3BaseVisitor[AS
     assert(ctx.comp_for() != null)
     val list = this.visit(ctx.comp_for().or_test())
     val var_name = ctx.comp_for().exprlist().getText
-    val new_example_predicates = for ((example_predicate, listVal) <- predicates.getExamplePredicates().zip(list.values.take(predicates.num_of_examples));
+    val new_example_predicates = for (((example_predicate, listVal), idx) <- predicates.getExamplePredicates().zip(list.values.take(predicates.num_of_examples)).zipWithIndex;
       elem <-listVal.toString.toList) yield {
-      example_predicate.updatePredicate(var_name, elem.toString)
+      example_predicate.updatePredicate(var_name, elem.toString, idx)
   }
-    val new_predicates = new_example_predicates ++ predicates.getNonExamplePredicates()
-    val newPredicatesClass = new Predicates(new_predicates, new_example_predicates.length)
+    val new_num_examples = new_example_predicates.length
+    val new_non_example_predicates_list = for((pred, idx) <- predicates.getNonExamplePredicates().zipWithIndex) yield pred match {
+      case predicate: RetainPredicate => predicate.clonePredicate(idx + new_num_examples)
+      case predicate: UsesVariablesPredicate => new UsesVariablesPredicate(idx + new_num_examples)
+    }
+    val new_predicates = new_example_predicates ++ new_non_example_predicates_list
+    val newPredicatesClass = new Predicates(new_predicates, new_num_examples)
     val new_parser = new ExpressionParser(newPredicatesClass)
     val key = new_parser.visit(ctx.test(0))
     val value = new_parser.visit(ctx.test(1))

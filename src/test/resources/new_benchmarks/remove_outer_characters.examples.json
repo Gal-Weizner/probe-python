@@ -1,0 +1,26 @@
+{
+  "varName": "rs",
+  "env": [
+    {
+      "time": 10,
+      "#": "",
+      "$": "",
+      "name": "'(The lion sleeps tonight)'",
+      "rs": "'The lion sleeps tonight'"
+    },
+    {
+      "time": 10,
+      "#": "",
+      "$": "",
+      "name": "'[The lion sleeps tonight]'",
+      "rs": "'The lion sleeps tonight'"
+    },
+    {
+      "time": 10,
+      "#": "",
+      "$": "",
+      "name": "'<The lion sleeps tonight>'",
+      "rs": "'The lion sleeps tonight'"
+    }
+  ]
+}

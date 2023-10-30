@@ -8,8 +8,8 @@ class TestTest extends JUnitSuite{
   @Test def doTest: Unit = {
     //(str.replace _arg_0 (str.replace _arg_0 _arg_2 _arg_0) _arg_1)
     val predicates = Predicates(List(ExamplePredicate(Map("_arg_0" -> "I love apples", "_arg_1" -> "I hate bananas",
-      "_arg_2" -> "banana"), Option("")),
-      ExamplePredicate(Map("_arg_0" -> "I love apples", "_arg_1" -> "I hate bananas", "_arg_2" -> "apple"), Option(""))), 2)
+      "_arg_2" -> "banana"), Option(""),0),
+      ExamplePredicate(Map("_arg_0" -> "I love apples", "_arg_1" -> "I hate bananas", "_arg_2" -> "apple"), Option(""),1)), 2)
 //    val inputs = Map("_arg_0" -> "I love apples", "_arg_1" -> "I hate bananas", "_arg_2" -> "banana") ::
 //      Map("_arg_0" -> "I love apples", "_arg_1" -> "I hate bananas", "_arg_2" -> "apple") :: Nil
 

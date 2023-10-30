@@ -1,0 +1,8 @@
+count_sub_strings_wrong_exclude.examples.json (inp1.upper().count(inp2.upper())) (inp1.lower().count(inp2.lower()))
+count_substring_exclude_part_of_correct_solution.examples.json (inp1.upper().count(inp2.upper())) (inp1.lower().count(inp2.lower()))
+count_substring_retain.examples.json (inp1.upper().count(inp2.upper())) (inp1.lower().count(inp2.lower()))
+count_substring_wrong_retain.examples.json (inp1.upper().count(inp2.upper())) (inp1.lower().count(inp2.lower()))
+divide_by_3_exclude.examples.json (inp1 // 3)
+map_characters_count_retain.examples.json ({var: inp.count(var) for var in inp})
+reverse_list_retain.examples.json (" ".join(s))[::-1].split(" ")
+reverse_words_retain.examples.json (" ".join([var[::-1] for var in line.split(" ")])

@@ -4,7 +4,7 @@ import java.io.FileOutputStream
 import ast.Types.Types
 import ast._
 import enumeration.{InputsValuesManager, PyEnumerator, PyProbEnumerator}
-import sygus.{Predicates, ExamplePredicate}
+import sygus.{ExamplePredicate, ExcludePredicate, Predicates, RetainPredicate, UsesVariablesPredicate}
 import trace.DebugPrints
 
 import scala.collection.mutable
@@ -271,11 +271,17 @@ abstract class MapCompVocabMaker(iterableType: Types, valueType: Types,
 
       if (lst.values.head.asInstanceOf[String].nonEmpty) {
         this.currList = lst
-        val example_predicates = for ((predicate, listVal) <- predicates_t.getExamplePredicates().zip(lst.values.take(predicates_t.num_of_examples));
+        val example_predicates = for (((predicate, listVal), idx) <- predicates_t.getExamplePredicates().zip(lst.values.take(predicates_t.num_of_examples)).zipWithIndex;
             elem <- listVal.toString.toList) yield {
-          predicate.updatePredicate(varName, elem.toString)
+          predicate.updatePredicate(varName, elem.toString, idx)
         }
-        val new_predicates = example_predicates ++ predicates_t.getNonExamplePredicates()
+        val new_num_examples = example_predicates.length
+        val new_non_example_predicates_list = for ((pred, idx) <- predicates_t.getNonExamplePredicates().zipWithIndex) yield pred match {
+          case predicate: RetainPredicate => predicate.clonePredicate(idx + new_num_examples)
+          case predicate: ExcludePredicate => predicate.clonePredicate(idx + new_num_examples)
+          case predicate: UsesVariablesPredicate => new UsesVariablesPredicate(idx + new_num_examples)
+        }
+        val new_predicates = example_predicates ++ new_non_example_predicates_list
         val newPredicatesClass = new Predicates(new_predicates, example_predicates.length)
         val oeValuesManager = new InputsValuesManager()
         this.enumerator = if (!size) {
@@ -528,12 +534,18 @@ abstract class FilteredMapVocabMaker(keyType: Types, valueType: Types,
       val map = mapIter.next()
       if (map.values.head.asInstanceOf[Map[_,_]].nonEmpty) {
         this.currMap = map
-        val example_predicates = for ((predicate, listVal) <- predicates_t.getExamplePredicates().zip(currMap.values.take(predicates_t.num_of_examples));
+        val example_predicates = for (((predicate, listVal), idx) <- predicates_t.getExamplePredicates().zip(currMap.values.take(predicates_t.num_of_examples)).zipWithIndex;
                                       elem <- listVal.toString.toList) yield {
-          predicate.updatePredicate(keyName, elem.toString)
+          predicate.updatePredicate(keyName, elem.toString, idx)
         }
-        val new_predicates = example_predicates ++ predicates_t.getNonExamplePredicates()
-        val newPredicatesClass = new Predicates(new_predicates, example_predicates.length)
+        val new_num_examples = example_predicates.length
+        val new_non_example_predicates_list = for ((pred, idx) <- predicates_t.getNonExamplePredicates().zipWithIndex) yield pred match {
+          case predicate: RetainPredicate => predicate.clonePredicate(idx + new_num_examples)
+          case predicate: ExcludePredicate => predicate.clonePredicate(idx + new_num_examples)
+          case predicate: UsesVariablesPredicate => new UsesVariablesPredicate(idx + new_num_examples)
+        }
+        val new_predicates = example_predicates ++ new_non_example_predicates_list
+        val newPredicatesClass = new Predicates(new_predicates, new_num_examples)
         val oeValuesManager = new InputsValuesManager()
         this.enumerator = if (!size) {
           new PyEnumerator(this.filterVocab, oeValuesManager, newPredicatesClass) }

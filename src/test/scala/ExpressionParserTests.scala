@@ -8,7 +8,7 @@ import sygus.{ExamplePredicate, ExpressionParser, Predicates, PythonPBETask, Use
 import scala.collection.mutable
 
 class ExpressionParserTests extends JUnitSuite{
-  val predicates = Predicates(List(ExamplePredicate(Map("x" -> 18), Option(19)), UsesVariablesPredicate()), 1)
+  val predicates = Predicates(List(ExamplePredicate(Map("x" -> 18), Option(19), 0), UsesVariablesPredicate(1)), 1)
   val parser = new ExpressionParser(predicates)
   @Test def parseArithAddition(): Unit = assertEquals("x + 1", parser.parse("x + 1").code)
   @Test def parseArithSubstraction(): Unit = assertEquals("x - 1", parser.parse("x - 1").code)

@@ -1,11 +1,11 @@
 package sygus
-import ast.{ASTNode, LiteralNode, Types}
+import ast.{ASTNode, LiteralNode, Types, VariableNode}
 
 import scala.collection.mutable
 import scala.reflect.internal.util.TriState.{False, True}
 
 trait Predicate {
-
+  val location: Int
   def observe(program:ASTNode): Option[Any]
   def check(program: ASTNode): Boolean
 //  def set_index(): Any
@@ -51,21 +51,21 @@ class Predicates(var predicates: List[Predicate], var num_of_examples: Int) {
 object Predicates {
   def apply(predicates: List[Predicate], num_of_examples: Int) = new Predicates(predicates, num_of_examples)
 }
-class ExamplePredicate (val context: Map[String, Any], val output: Option[Any]) extends Predicate
+class ExamplePredicate (val context: Map[String, Any], val output: Option[Any], val location: Int) extends Predicate
 {
   override def observe(program: ASTNode): Option[Any] = program.computeOnContext(context)
 
   override def check(program: ASTNode): Boolean = program.predicates.getExampleValue(program.values, this.context) == this.output.get
 
-  def updatePredicate(var_name: String, value: Any): ExamplePredicate =
+  def updatePredicate(var_name: String, value: Any, location: Int): ExamplePredicate =
   {
-    new ExamplePredicate(this.context + (var_name -> value), None)
+    new ExamplePredicate(this.context + (var_name -> value), None, location)
   }
 }
 object ExamplePredicate{
-  def apply(ctx: Map[String, Any], output: Option[Any]) = new ExamplePredicate(ctx, output)
+  def apply(ctx: Map[String, Any], output: Option[Any], location: Int) = new ExamplePredicate(ctx, output, location)
 }
-class UsesVariablesPredicate() extends Predicate
+class UsesVariablesPredicate(val location: Int) extends Predicate
 {
   override def observe(program: ASTNode): Option[Any] = Some(program.usesVariables)
 
@@ -73,74 +73,141 @@ class UsesVariablesPredicate() extends Predicate
 }
 
 object UsesVariablesPredicate{
-  def apply() = new UsesVariablesPredicate()
+  def apply(location: Int) = new UsesVariablesPredicate(location)
 }
 
-class RetainPredicate(expression_tree: ASTNode) extends Predicate
-{
-  val (leaves_map, v_map) = assign_numbers_to_tree_nodes(expression_tree)
 
-  def assign_numbers_to_tree_nodes_rec(node: ASTNode, leaves_map: mutable.Map[ASTNode, Int],
+object RESLPrecidate
+{
+  def assign_numbers_to_tree_nodes_rec(node: ASTNode, leaves_map: mutable.Map[(Class[_], Any), Int],
                                        v_map: mutable.Map[(Class[_], List[Int]), Int],
                                        counter: Int): Int = {
     if (node.children.isEmpty) {
-      if(!leaves_map.contains(node))
-        {
-          leaves_map += node -> counter
-          counter + 1
+      val node_tuple = node match {
+        case lit_node: LiteralNode[_] => (lit_node.getClass, lit_node.value)
+        case var_node: VariableNode[_] => (var_node.getClass, var_node.name)
+      }
+      if (!leaves_map.contains(node_tuple)) {
+        node match {
+          case lit_node: LiteralNode[_] =>
+            leaves_map += (lit_node.getClass, lit_node.value) -> counter
+            counter + 1
+
+          case var_node: VariableNode[_] =>
+            leaves_map += (var_node.getClass, var_node.name) -> counter
+            counter + 1
         }
-      else
-        {
-          counter
-        }
+      }
+      else {
+        counter
+      }
     }
     else {
       var current_counter = counter
-      for(child <- node.children){
+      for (child <- node.children) {
         current_counter = assign_numbers_to_tree_nodes_rec(child, leaves_map, v_map, current_counter)
       }
-      val children_vector = node.children.map(c=>idOf_internal(c, leaves_map.toMap, v_map.toMap)).toList
-      if(!v_map.contains((node.getClass, children_vector))){
+      val children_vector = node.children.map(c => idOf_internal(c, leaves_map.toMap, v_map.toMap)).toList
+      if (!v_map.contains((node.getClass, children_vector))) {
         v_map += (node.getClass, children_vector) -> current_counter
         current_counter + 1
       }
-      else
-        {
-          current_counter
-        }
+      else {
+        current_counter
+      }
     }
   }
 
-  def assign_numbers_to_tree_nodes(node: ASTNode): (Map[ASTNode, Int], Map[(Class[_], List[Int]), Int]) = {
+  def assign_numbers_to_tree_nodes(node: ASTNode): (Map[(Class[_], Any), Int], Map[(Class[_], List[Int]), Int]) = {
     val v_map = mutable.Map[(Class[_], List[Int]), Int]()
-    val leaves_map = mutable.Map[ASTNode, Int]()
+    val leaves_map = mutable.Map[(Class[_], Any), Int]()
     var current_counter = 2
     for (child <- node.children) {
       current_counter = assign_numbers_to_tree_nodes_rec(child, leaves_map, v_map, current_counter)
     }
-    v_map += (node.getClass, node.children.map(c=>idOf_internal(c, leaves_map.toMap, v_map.toMap)).toList) -> 1
+    v_map += (node.getClass, node.children.map(c => idOf_internal(c, leaves_map.toMap, v_map.toMap)).toList) -> 1
     (leaves_map.toMap, v_map.toMap)
   }
 
-  def idOf(node: ASTNode): Int = {
-    idOf_internal(node, leaves_map, v_map)
-  }
-
-  def idOf_internal(node: ASTNode, leaves_map:Map[ASTNode, Int],
+  def idOf_internal(node: ASTNode, leaves_map: Map[(Class[_], Any), Int],
                     v_map: Map[(Class[_], List[Int]), Int]): Int = {
-    if (node.children.isEmpty)
-    {
-      leaves_map(node)
-    }
-    else
-      {
-        v_map((node.getClass, node.children.map(c=>idOf_internal(c, leaves_map, v_map)).toList))
+    if (node.children.isEmpty) {
+      val key = node match {
+        case lit_node: LiteralNode[_] => (lit_node.getClass, lit_node.value)
+        case var_node: VariableNode[_] => (var_node.getClass, var_node.name)
       }
+      leaves_map.getOrElse(key, 0)
+    }
+    else {
+      v_map.getOrElse((node.getClass, node.children.map(c => idOf_internal(c, leaves_map, v_map)).toList), 0)
+    }
   }
-
-  override def observe(program: ASTNode): Option[Int] = ???
-
-  override def check(program: ASTNode): Boolean = program.values.last.asInstanceOf[Boolean]
 }
 
+object RetainPredicate{
+  def apply (location: Int, leaves_map: Map[(Class[_], Any), Int],
+  v_map: Map[(Class[_], List[Int]), Int]) = {
+    new RetainPredicate(leaves_map, v_map, location)
+  }
+
+}
+class RetainPredicate(val leaves_map: Map[(Class[_], Any), Int], val v_map: Map[(Class[_], List[Int]), Int],
+                      val location: Int) extends Predicate
+{
+
+  def idOf(node: ASTNode): Int = {
+    RESLPrecidate.idOf_internal(node, leaves_map, v_map)
+  }
+
+  override def observe(program: ASTNode): Option[Int] = {
+    for (child <- program.children)
+    {
+      if (child.values(location) == 1)
+        {
+          return Some(1)
+        }
+    }
+    Some(idOf(program))
+  }
+
+  override def check(program: ASTNode): Boolean = program.values(location) == 1
+
+  def clonePredicate(new_location: Int): RetainPredicate = {
+      new RetainPredicate(leaves_map, v_map, new_location)
+  }
+}
+
+object ExcludePredicate {
+  def apply(location: Int, leaves_map: Map[(Class[_], Any), Int],
+            v_map: Map[(Class[_], List[Int]), Int]): ExcludePredicate = {
+//    val (leaves_map, v_map) = RESLPrecidate.assign_numbers_to_tree_nodes(expression_tree)
+    new ExcludePredicate(leaves_map, v_map, location)
+  }
+
+}
+
+class ExcludePredicate(val leaves_map: Map[(Class[_], Any), Int], val v_map: Map[(Class[_], List[Int]), Int],
+                      val location: Int) extends Predicate
+{
+  def idOf(node: ASTNode): Int = {
+    RESLPrecidate.idOf_internal(node, leaves_map, v_map)
+  }
+
+  override def observe(program: ASTNode): Option[Int] = {
+    for (child <- program.children)
+    {
+      if (child.values(location) == 1)
+      {
+        return Some(0)
+      }
+    }
+    Some(idOf(program))
+  }
+
+  override def check(program: ASTNode): Boolean = program.values(location) == 0
+
+  def clonePredicate(new_location: Int): ExcludePredicate = {
+    new ExcludePredicate(leaves_map, v_map, new_location)
+  }
+}
 

@@ -127,6 +127,9 @@ class PyProbEnumerator(val vocab: VocabFactory,
     while (res.isEmpty) {
       if (rootMaker.hasNext) {
         val program = rootMaker.next
+        if (program.code == "inp1.upper().count(inp2.upper())") {
+          print("Hello upper upper!!!")
+        }
         if (program.values.nonEmpty && oeManager.isRepresentative(program)
         && !oeManager.irrelevant(program)
         ) res = Some(program)

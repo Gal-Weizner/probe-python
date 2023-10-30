@@ -1,0 +1,29 @@
+{
+  "varName": "rs",
+  "env": [
+    {
+      "#": "",
+      "$": "",
+      "inp1": "'Welcome to USA. usa usa usa usa!'",
+      "inp2": "'usa'",
+      "rs": "5"
+    },
+    {
+      "#": "",
+      "$": "",
+      "inp1": "'Welcome to USA. usa usa usa usa!'",
+      "inp2": "'USA'",
+      "rs": "5"
+    },
+    {
+      "#": "",
+      "$": "",
+      "inp1": "' not about the money money money'",
+      "inp2": "'MONEY'",
+      "rs": "4"
+    }
+  ],
+  "retain": [
+    "inp2.upper()"
+  ]
+}

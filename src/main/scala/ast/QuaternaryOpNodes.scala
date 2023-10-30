@@ -14,18 +14,10 @@ trait QuaternaryOpNode[T] extends ASTNode
     doOp(arg0.predicates.getExampleValue(arg0.values, ctx),arg1.predicates.getExampleValue(arg1.values, ctx),
       arg2.predicates.getExampleValue(arg2.values, ctx), arg3.predicates.getExampleValue(arg3.values, ctx))
   }
-//  lazy val values: List[T] = arg0.values
-//    .zip(arg1.values)
-//    .zip(arg2.values)
-//    .zip(arg3.values)
-//    .map(tup => doOp(tup._1._1._1, tup._1._1._2, tup._1._2, tup._2)) match {
-//    case l if l.forall(_.isDefined) => l.map(_.get)
-//    case _ => Nil
-//  }
 
   override val height: Int = 1 + Math.max(arg0.height, Math.max(arg1.height, Math.max(arg2.height, arg3.height)))
   override val terms : Int = 1 + arg0.terms + arg1.terms + arg2.terms + arg3.terms
-  override val children: Iterable[ASTNode] = Iterable(arg0, arg1, arg2, arg3)
+  override def children: Iterable[ASTNode] = Iterable(arg0, arg1, arg2, arg3)
 
   assert(arg0.values.length == arg1.values.length &&
     arg1.values.length == arg2.values.length &&
@@ -44,14 +36,13 @@ trait QuaternaryOpNode[T] extends ASTNode
   override lazy val usesVariables: Boolean =
     arg0.usesVariables || arg1.usesVariables ||
       arg2.usesVariables || arg3.usesVariables
-  override def updateValues(predicates: Predicates) = null
-
 
 }
 
 // TODO Test is extensively before adding it
-class QuaternarySubstring(val arg0: PyStringNode, val arg1: PyIntNode,val arg2: PyIntNode,
-                          val arg3: PyIntNode,  val predicates: Predicates) extends QuaternaryOpNode[String] with PyStringNode
+case class QuaternarySubstring(val arg0: PyStringNode, val arg1: PyIntNode,val arg2: PyIntNode,
+                          val arg3: PyIntNode,  val predicates: Predicates)
+  extends QuaternaryOpNode[String] with PyStringNode
 {
   override protected val parenless: Boolean = false
   override lazy val code: String =
@@ -90,4 +81,8 @@ class QuaternarySubstring(val arg0: PyStringNode, val arg1: PyIntNode,val arg2: 
       a1.asInstanceOf[PyIntNode],
       a2.asInstanceOf[PyIntNode],
       a3.asInstanceOf[PyIntNode], predicates)
+
+  override def updateValues(predicates_t: Predicates): QuaternarySubstring = this.copy(arg0 = arg0.updateValues(predicates_t).asInstanceOf[PyStringNode],
+    arg1 = arg1.updateValues(predicates_t).asInstanceOf[PyIntNode], arg2 = arg2.updateValues(predicates_t).asInstanceOf[PyIntNode],
+    arg3 = arg3.updateValues(predicates_t).asInstanceOf[PyIntNode], predicates = predicates_t)
 }

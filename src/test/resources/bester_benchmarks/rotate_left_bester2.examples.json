@@ -1,0 +1,28 @@
+{
+  "mistake": "Rotate 3 instead of two characters",
+  "varName": "rs",
+  "env": [
+    {
+      "#": "",
+      "$": "",
+      "s": "'qwertyu'",
+      "count": "1",
+      "rs": "'uqwerty'"
+    },
+    {
+      "time": 4,
+      "#": "",
+      "$": "",
+      "s": "'qwertyu'",
+      "count": "2",
+      "rs": "'ertyuqw'"
+    },
+    {
+      "#": "",
+      "$": "",
+      "s": "'pineapple'",
+      "count": "2",
+      "rs": "'eapplepin'"
+    }
+  ]
+}

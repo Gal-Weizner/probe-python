@@ -8,7 +8,7 @@ trait UnaryOpNode[T] extends ASTNode
   override def computeOnContext(ctx: Map[String, Any]): Option[Any] = doOp(arg.predicates.getExampleValue(arg.values, ctx))
   override val height: Int = 1 + arg.height
   override val terms: Int = 1 + arg.terms
-  override val children: Iterable[ASTNode] = Iterable(arg)
+  override def children: Iterable[ASTNode] = Iterable(arg)
   val arg: ASTNode
 
   def doOp(x: Any): Option[T]

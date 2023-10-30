@@ -1,0 +1,26 @@
+{
+  "varName": "rs",
+  "env": [
+    {
+      "#": "",
+      "$": "",
+      "step": "-1",
+      "line": "'hello world!'",
+      "rs": "'olleh !dlrow'"
+    },
+    {
+      "#": "",
+      "$": "",
+      "step": "-1",
+      "line": "'Sorin Lerner'",
+      "rs": "'niroS renreL'"
+    },
+    {
+      "#": "",
+      "$": "",
+      "step": "-1",
+      "line": "'Abc def ghi'",
+      "rs": "'cbA fed ihg'"
+    }
+  ]
+}

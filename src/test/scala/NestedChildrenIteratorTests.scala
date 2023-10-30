@@ -11,10 +11,10 @@ import scala.collection.mutable.{ArrayBuffer, HashMap}
 
 class NestedChildrenIteratorsTests extends JUnitSuite {
   @Test def nestedIterator1(): Unit = {
-    val predicates1 = Predicates(List(ExamplePredicate(Map("name" -> "Sorin Lerner"), Option("")),
-      ExamplePredicate(Map("name" -> "Nadia"), Option(""))), 2)
-    val predicates2 = Predicates(List(ExamplePredicate(Map("var" -> "Sorin Lerner"), Option("")),
-      ExamplePredicate(Map("var" -> "Nadia"), Option(""))), 2)
+    val predicates1 = Predicates(List(ExamplePredicate(Map("name" -> "Sorin Lerner"), Option(""),0),
+      ExamplePredicate(Map("name" -> "Nadia"), Option(""), 1)), 2)
+    val predicates2 = Predicates(List(ExamplePredicate(Map("var" -> "Sorin Lerner"), Option(""), 0),
+      ExamplePredicate(Map("var" -> "Nadia"), Option(""), 1)), 2)
     var main = mutable.Map[Int, mutable.ArrayBuffer[ASTNode]]()
     var mini = mutable.Map[Int, mutable.ArrayBuffer[ASTNode]]()
     main += (1 -> ArrayBuffer(new PyIntLiteral(0, 2, predicates1)))
@@ -32,10 +32,10 @@ class NestedChildrenIteratorsTests extends JUnitSuite {
   @Test def nestedIterator2(): Unit = {
     var main = mutable.Map[Int, mutable.ArrayBuffer[ASTNode]]()
     var mini = mutable.Map[Int, mutable.ArrayBuffer[ASTNode]]()
-    val predicates1 = Predicates(List(ExamplePredicate(Map("name" -> "SL"), Option("")),
-      ExamplePredicate(Map("name" -> "N"), Option("")), ExamplePredicate(Map("name" -> "SB"), Option(""))), 3)
-    val predicates2 = Predicates(List(ExamplePredicate(Map("var" -> "SL"), Option("")),
-      ExamplePredicate(Map("var" -> "N"), Option("")), ExamplePredicate(Map("var" -> "SB"), Option(""))), 3)
+    val predicates1 = Predicates(List(ExamplePredicate(Map("name" -> "SL"), Option(""),0),
+      ExamplePredicate(Map("name" -> "N"), Option(""),1), ExamplePredicate(Map("name" -> "SB"), Option(""),2)), 3)
+    val predicates2 = Predicates(List(ExamplePredicate(Map("var" -> "SL"), Option(""),0),
+      ExamplePredicate(Map("var" -> "N"), Option(""),1), ExamplePredicate(Map("var" -> "SB"), Option(""),2)), 3)
     main += (1 -> ArrayBuffer(new PyStringLiteral("s", 3, predicates2),
       new PyIntLiteral(0, 3, predicates2)))
     mini += (1 -> ArrayBuffer(PyStringVariable("name", predicates1),
@@ -59,7 +59,7 @@ class NestedChildrenIteratorsTests extends JUnitSuite {
 
   @Test def onesIterator(): Unit = {
     //Limit by height
-    val predicates = Predicates(List(ExamplePredicate(Map("x" -> 0), Option(0))), 0)
+    val predicates = Predicates(List(ExamplePredicate(Map("x" -> 0), Option(0),0)), 0)
     val nodes = List(new IntLiteral(1, 1, predicates), new IntLiteral(2, 1, predicates),
       new IntLiteral(3, 1, predicates), new IntAddition(new IntVariable("x", predicates),
         new IntLiteral(1, 1, predicates), predicates))
@@ -70,7 +70,7 @@ class NestedChildrenIteratorsTests extends JUnitSuite {
   }
 
   @Test def pairsHeightFiltered(): Unit = {
-    val predicates = Predicates(List(ExamplePredicate(Map("x" -> 0), Option(0))), 0)
+    val predicates = Predicates(List(ExamplePredicate(Map("x" -> 0), Option(0),0)), 0)
     val nodes = List(new IntLiteral(1, 1, predicates), new IntLiteral(2, 1, predicates),
       new IntLiteral(3, 1, predicates), new IntAddition(new IntVariable("x", predicates),
         new IntLiteral(1, 1, predicates), predicates))

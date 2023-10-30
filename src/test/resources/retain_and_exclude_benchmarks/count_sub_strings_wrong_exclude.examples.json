@@ -6,21 +6,24 @@
       "$": "",
       "inp1": "'apple apples'",
       "inp2": "'apple'",
-      "rs": "'aa'"
+      "rs": "2"
     },
     {
       "#": "",
       "$": "",
       "inp1": "'an orange among the oranges is a spoiled orange'",
       "inp2": "'orange'",
-      "rs": "'ao'"
+      "rs": "4"
     },
     {
       "#": "",
       "$": "",
       "inp1": "'bqqmf apple '",
       "inp2": "'apple'",
-      "rs": "'ba'"
+      "rs": "122"
     }
+  ],
+  "exclude": [
+    "inp2[3:-1]"
   ]
 }

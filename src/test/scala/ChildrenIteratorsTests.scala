@@ -8,7 +8,7 @@ import sygus.{ExamplePredicate, Predicates}
 
 class ChildrenIteratorsTests extends JUnitSuite {
     @Test def pairsIterator(): Unit = {
-                  val predicates = Predicates(List(ExamplePredicate(Map("x" -> 0), Option(0))), 0)
+                  val predicates = Predicates(List(ExamplePredicate(Map("x" -> 0), Option(0), 0)), 1)
                   val nodes = List(new IntLiteral(1, 1, predicates),
                     new IntLiteral(2, 1, predicates), new IntLiteral(3, 1, predicates))
                   val chit = new ChildrenIterator(nodes, List(Types.Int, Types.Int), 1)
@@ -27,7 +27,7 @@ class ChildrenIteratorsTests extends JUnitSuite {
 
      @Test def onesIterator(): Unit = {
                   //Limit by height
-       val predicates = Predicates(List(ExamplePredicate(Map("x" -> 0), Option(0))), 0)
+       val predicates = Predicates(List(ExamplePredicate(Map("x" -> 0), Option(0), 0)), 0)
        val nodes = List(new IntLiteral(1, 1, predicates), new IntLiteral(2, 1, predicates),
          new IntLiteral(3, 1, predicates), new IntAddition(new IntVariable("x", predicates),
            new IntLiteral(1, 1, predicates), predicates))
@@ -38,7 +38,7 @@ class ChildrenIteratorsTests extends JUnitSuite {
                   }
 
      @Test def pairsHeightFiltered(): Unit = {
-                  val predicates = Predicates(List(ExamplePredicate(Map("x" -> 0), Option(0))), 0)
+                  val predicates = Predicates(List(ExamplePredicate(Map("x" -> 0), Option(0), 0 )), 0)
                   val nodes = List(new IntLiteral(1, 1, predicates), new IntLiteral(2, 1, predicates),
                     new IntLiteral(3, 1, predicates), new IntAddition(new IntVariable("x",predicates),
                       new IntLiteral(1, 1, predicates), predicates))

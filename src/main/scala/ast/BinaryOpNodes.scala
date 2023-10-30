@@ -17,7 +17,7 @@ trait BinaryOpNode[T] extends ASTNode{
   override def computeOnContext(ctx: Map[String, Any]): Option[Any] = doOp(lhs.predicates.getExampleValue(lhs.values, ctx),rhs.predicates.getExampleValue(rhs.values, ctx))
 
 
-  override val children: Iterable[ASTNode] = Iterable(lhs,rhs)
+  override def children: Iterable[ASTNode] = Iterable(lhs,rhs)
   override lazy val usesVariables: Boolean = lhs.usesVariables || rhs.usesVariables
 
   def includes(varName: String): Boolean = lhs.includes(varName) || rhs.includes(varName)

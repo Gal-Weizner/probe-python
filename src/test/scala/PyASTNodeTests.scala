@@ -9,7 +9,7 @@ class PyASTNodeTests extends JUnitSuite {
   @Test def stringLiteralNode(): Unit = {
     val input = Map("inp1" -> "'Welcome to USA. usa usa usa usa!'", "inp2" -> "'USA'")
     val output = Option(5)
-    val example_predicate = ExamplePredicate(input, output)
+    val example_predicate = ExamplePredicate(input, output,0)
     val predicates = Predicates(List(example_predicate), 1)
     val literal: PyStringLiteral = new PyStringLiteral("abc", 1, predicates)
     assertEquals(1, literal.values.length)
@@ -22,7 +22,7 @@ class PyASTNodeTests extends JUnitSuite {
   }
 
   @Test def stringLiteralEscaping(): Unit = {
-    val predicates = Predicates(List(ExamplePredicate(Map("inp"->"\"a\\tb\\r\\n\""), Option("\"a\\tb\\r\\n\""))), 1)
+    val predicates = Predicates(List(ExamplePredicate(Map("inp"->"\"a\\tb\\r\\n\""), Option("\"a\\tb\\r\\n\""), 0)), 1)
     assertEquals("\"a\\tb\\r\\n\"", new PyStringLiteral("a\tb\r\n", 1, predicates).code)
     assertEquals("\"a\\\\tb\\\\r\\\\n\"", new PyStringLiteral("a\\tb\\r\\n", 1, predicates).code)
     assertEquals("\"a\\\"b\\\"c\"", new PyStringLiteral("a\"b\"c", 1, predicates).code)
@@ -30,7 +30,7 @@ class PyASTNodeTests extends JUnitSuite {
   }
 
   @Test def intLiteralNode(): Unit = {
-    val predicates = Predicates(List(ExamplePredicate(Map("inp"-> 42), Option(42))), 1)
+    val predicates = Predicates(List(ExamplePredicate(Map("inp"-> 42), Option(42),0)), 1)
     val literal: PyIntLiteral = new PyIntLiteral(42, 1, predicates)
     assertEquals(1, literal.values.length)
     assertEquals(42, literal.values.head)
@@ -42,7 +42,7 @@ class PyASTNodeTests extends JUnitSuite {
   }
 
   @Test def boolLiteralNode(): Unit = {
-    val predicates = Predicates(List(ExamplePredicate(Map("inp"-> false), Option(false))), 1)
+    val predicates = Predicates(List(ExamplePredicate(Map("inp"-> false), Option(false),0)), 1)
     var literal: PyBoolLiteral = new PyBoolLiteral(false, 1, predicates)
     assertEquals(1, literal.values.length)
     assertEquals(false, literal.values.head)
@@ -63,7 +63,7 @@ class PyASTNodeTests extends JUnitSuite {
   }
 
   @Test def intToStringNode(): Unit = {
-    val example = ExamplePredicate(Map("inp" -> 83), Option("83"))
+    val example = ExamplePredicate(Map("inp" -> 83), Option("83"),0)
     val predicates = Predicates(List(example), 1)
     val node: PyIntToString = new PyIntToString(new PyIntLiteral(83, 1, predicates), predicates)
     assertEquals(1, node.values.length)
@@ -76,7 +76,7 @@ class PyASTNodeTests extends JUnitSuite {
   }
 
   @Test def stringToIntNode(): Unit = {
-    val example = ExamplePredicate(Map("inp" -> "83"), Option(83))
+    val example = ExamplePredicate(Map("inp" -> "83"), Option(83),0)
     val predicates = Predicates(List(example), 1)
     val node: PyStringToInt = new PyStringToInt(new PyStringLiteral("83", 1, predicates), predicates)
     assertEquals(1, node.values.length)
@@ -89,7 +89,7 @@ class PyASTNodeTests extends JUnitSuite {
   }
 
   @Test def stringLowerNode(): Unit = {
-    val example1 = ExamplePredicate(Map("inp" -> "aBC"), Option("abc"))
+    val example1 = ExamplePredicate(Map("inp" -> "aBC"), Option("abc"),0)
     val predicates1 = Predicates(List(example1), 1)
     var node: PyStringLower = new PyStringLower(new PyStringLiteral("aBC", 1, predicates1), predicates1)
     assertEquals(1, node.values.length)
@@ -100,7 +100,7 @@ class PyASTNodeTests extends JUnitSuite {
     assertEquals(2, node.terms)
     assertEquals(node.children.size, 1)
 
-    val example2 = ExamplePredicate(Map("inp1" -> "aBC", "inp2"->"deF"), Option("abcdef"))
+    val example2 = ExamplePredicate(Map("inp1" -> "aBC", "inp2"->"deF"), Option("abcdef"),0)
     val predicates2 = Predicates(List(example2), 1)
     node = new PyStringLower(new PyStringConcat(
       new PyStringLiteral("aBC", 1, predicates2),
@@ -115,7 +115,7 @@ class PyASTNodeTests extends JUnitSuite {
   }
 
   @Test def intMultiplication(): Unit = {
-    val example = ExamplePredicate(Map("inp1" -> 1, "inp2" -> 2, "inp3"->3, "inp4"->4), Option("1 * 2 * 3 * 4"))
+    val example = ExamplePredicate(Map("inp1" -> 1, "inp2" -> 2, "inp3"->3, "inp4"->4), Option("1 * 2 * 3 * 4"),0)
     val predicates = Predicates(List(example), 1)
     val multiplyNumbers = new PyIntMultiply(new
         PyIntMultiply(new PyIntLiteral(1, 1, predicates),
@@ -127,7 +127,7 @@ class PyASTNodeTests extends JUnitSuite {
   }
 
   @Test def stringMultiplication(): Unit = {
-    val example = ExamplePredicate(Map("inp" -> "a"), Option("aaa"))
+    val example = ExamplePredicate(Map("inp" -> "a"), Option("aaa"),0)
     val predicates = Predicates(List(example), 1)
     val multiply = new PyStringMultiply(
       new PyStringLiteral("a", 1, predicates),
@@ -137,10 +137,10 @@ class PyASTNodeTests extends JUnitSuite {
   }
 
   @Test def alpha(): Unit = {
-    val example1 = ExamplePredicate(Map("inp" -> "abc"), Option(true))
-    val example2 = ExamplePredicate(Map("inp" -> "a123"), Option(false))
-    val example3 = ExamplePredicate(Map("inp" -> "a "), Option(false))
-    val example4 = ExamplePredicate(Map("inp" -> "a%*"), Option(false))
+    val example1 = ExamplePredicate(Map("inp" -> "abc"), Option(true),0)
+    val example2 = ExamplePredicate(Map("inp" -> "a123"), Option(false),0)
+    val example3 = ExamplePredicate(Map("inp" -> "a "), Option(false),0)
+    val example4 = ExamplePredicate(Map("inp" -> "a%*"), Option(false),0)
 
     val isAlpha1 = new PyIsAlpha(new PyStringLiteral("abc", 1, Predicates(List(example1), 1)), Predicates(List(example1), 1))
     val isAlpha2 = new PyIsAlpha(new PyStringLiteral("a123", 1, Predicates(List(example2), 1)), Predicates(List(example2), 1))
@@ -153,10 +153,10 @@ class PyASTNodeTests extends JUnitSuite {
   }
 
   @Test def numeric(): Unit = {
-    val example1 = ExamplePredicate(Map("inp" -> "abc123"), Option(false))
-    val example2 = ExamplePredicate(Map("inp" -> "123"), Option(true))
-    val example3 = ExamplePredicate(Map("inp" -> "123 "), Option(false))
-    val example4 = ExamplePredicate(Map("inp" -> "123%*"), Option(false))
+    val example1 = ExamplePredicate(Map("inp" -> "abc123"), Option(false),0)
+    val example2 = ExamplePredicate(Map("inp" -> "123"), Option(true),0)
+    val example3 = ExamplePredicate(Map("inp" -> "123 "), Option(false),0)
+    val example4 = ExamplePredicate(Map("inp" -> "123%*"), Option(false),0)
     val isNumeric1 = new PyIsNumeric(new PyStringLiteral("abc123", 1, Predicates(List(example1), 1)), Predicates(List(example1), 1))
     val isNumeric2 = new PyIsNumeric(new PyStringLiteral("123", 1, Predicates(List(example2), 1)), Predicates(List(example2), 1))
     val isNumeric3 = new PyIsNumeric(new PyStringLiteral("123 ", 1, Predicates(List(example3), 1)), Predicates(List(example3), 1))
@@ -169,10 +169,10 @@ class PyASTNodeTests extends JUnitSuite {
   }
 
   @Test def startsWith(): Unit = {
-    val example1 = ExamplePredicate(Map("inp" -> "abc123", "inp2"-> "abc"), Option(true))
-    val example2 = ExamplePredicate(Map("inp" -> "123", "inp2"->"23"), Option(false))
-    val example3 = ExamplePredicate(Map("inp" -> "abc123", "inp2"-> "123"), Option(false))
-    val example4 = ExamplePredicate(Map("inp" -> "123", "inp2"->"3"), Option(false))
+    val example1 = ExamplePredicate(Map("inp" -> "abc123", "inp2"-> "abc"), Option(true),0)
+    val example2 = ExamplePredicate(Map("inp" -> "123", "inp2"->"23"), Option(false),0)
+    val example3 = ExamplePredicate(Map("inp" -> "abc123", "inp2"-> "123"), Option(false),0)
+    val example4 = ExamplePredicate(Map("inp" -> "123", "inp2"->"3"), Option(false),0)
     val StartsWith1 = new PyStartsWith(new PyStringLiteral("abc123", 1, Predicates(List(example1), 1)),
       new PyStringLiteral("abc", 1, Predicates(List(example1), 1)), Predicates(List(example1), 1))
     val StartsWith2 = new PyStartsWith(new PyStringLiteral("123", 1, Predicates(List(example2), 1)),
@@ -248,7 +248,7 @@ class PyASTNodeTests extends JUnitSuite {
   // Binary Operations
   @Test def binarySubstringNode(): Unit =
   {
-    val example1 = ExamplePredicate(Map("inp" -> "abc"), Option("a"))
+    val example1 = ExamplePredicate(Map("inp" -> "abc"), Option("a"),0)
     val str: PyStringNode = new PyStringLiteral("abc", 1, Predicates(List(example1),1))
 
     var node: PyBinarySubstring = new PyBinarySubstring(str, new PyIntLiteral(0,1, Predicates(List(example1),1)),
@@ -261,7 +261,7 @@ class PyASTNodeTests extends JUnitSuite {
     assertEquals(3, node.terms)
     assertEquals(node.children.size, 2)
 
-    val example2 = ExamplePredicate(Map("inp" -> "abc"), Option("b"))
+    val example2 = ExamplePredicate(Map("inp" -> "abc"), Option("b"),0)
     node = new PyBinarySubstring(str, new PyIntLiteral(1,1, Predicates(List(example2),1)),
       Predicates(List(example2),1))
     assertEquals(1, node.values.length)
@@ -272,7 +272,7 @@ class PyASTNodeTests extends JUnitSuite {
     assertEquals(3, node.terms)
     assertEquals(node.children.size, 2)
 
-    val example3 = ExamplePredicate(Map("inp" -> "abc"), Option("c"))
+    val example3 = ExamplePredicate(Map("inp" -> "abc"), Option("c"),0)
     node = new PyBinarySubstring(str, new PyIntLiteral(2,1, Predicates(List(example3),1)),
       Predicates(List(example3),1))
     assertEquals(1, node.values.length)
@@ -295,7 +295,7 @@ class PyASTNodeTests extends JUnitSuite {
   // Ternary Operations
   @Test def ternarySubstringNode(): Unit =
   {
-    val example = ExamplePredicate(Map("inp" -> "abc"), Option("abc"))
+    val example = ExamplePredicate(Map("inp" -> "abc"), Option("abc"),0)
     val predicates = Predicates(List(example),1)
     val str: PyStringNode = new PyStringLiteral("abc", 1, predicates)
     var node: TernarySubstring = new TernarySubstring(
@@ -514,7 +514,7 @@ class PyASTNodeTests extends JUnitSuite {
   // Quaternary Operations
   @Test def quaternarySubstringNode(): Unit =
   {
-    val example = ExamplePredicate(Map("inp" -> "abc"), Option("abc"))
+    val example = ExamplePredicate(Map("inp" -> "abc"), Option("abc"),0)
     val predicates = Predicates(List(example),1)
     val str: PyStringNode = new PyStringLiteral("abc", 1, predicates)
     var node: QuaternarySubstring = new QuaternarySubstring(
@@ -1124,8 +1124,8 @@ class PyASTNodeTests extends JUnitSuite {
   @Test def stringSplitNode(): Unit = ()
   @Test def stringJoinNode(): Unit = ()
   @Test def stringStepListNode(): Unit = {
-    val predicates = Predicates(List(ExamplePredicate(Map("x" -> "abcde"), Option("abcde")),
-      ExamplePredicate( Map("x" -> "a"), Option("a")), ExamplePredicate(Map("x" -> "ab"), Option("a"))), 3)
+    val predicates = Predicates(List(ExamplePredicate(Map("x" -> "abcde"), Option("abcde"),0),
+      ExamplePredicate( Map("x" -> "a"), Option("a"),1), ExamplePredicate(Map("x" -> "ab"), Option("a"),2)), 3)
     val x = new PyStringVariable("x", predicates)
     val step = new PyStringStep(x,new PyIntLiteral(1,x.values.length, predicates), predicates)
     assertEquals("x[::1]",step.code)
@@ -1150,24 +1150,24 @@ class PyASTNodeTests extends JUnitSuite {
   @Test def stringToIntListNode(): Unit = ()
   @Test def sortedStringListNode(): Unit = ()
   @Test def stringCount(): Unit = {
-    val predicates1 = Predicates(List(ExamplePredicate(Map("x" -> ""), Option(0)),
-      ExamplePredicate(Map("x" -> "abc"), Option(1)), ExamplePredicate(Map("x" -> "bc"), Option(0)), ExamplePredicate(Map("x" -> "aaaabc"),
-        Option(4)), ExamplePredicate(Map("x" -> "abcabc"), Option(2))), 5)
+    val predicates1 = Predicates(List(ExamplePredicate(Map("x" -> ""), Option(0),0),
+      ExamplePredicate(Map("x" -> "abc"), Option(1),1), ExamplePredicate(Map("x" -> "bc"), Option(0),2), ExamplePredicate(Map("x" -> "aaaabc"),
+        Option(4),3), ExamplePredicate(Map("x" -> "abcabc"), Option(2),4)), 5)
     val x = new PyStringVariable("x", predicates1)
     val count = new PyCount(x,new PyStringLiteral("a",x.values.length, predicates1), predicates1)
     assertEquals("x.count(\"a\")",count.code)
     assertEquals(List(0, 1, 0, 4, 2), count.values)
 
-    val predicates2 = Predicates(List(ExamplePredicate(Map("x" -> ""), Option(0)),
-      ExamplePredicate(Map("x" -> "abc"), Option(0)), ExamplePredicate(Map("x" -> "bc"), Option(0)), ExamplePredicate(Map("x" -> "aaaabc"),
-        Option(2)), ExamplePredicate(Map("x" -> "abcabc"), Option(0))), 5)
+    val predicates2 = Predicates(List(ExamplePredicate(Map("x" -> ""), Option(0),0),
+      ExamplePredicate(Map("x" -> "abc"), Option(0),1), ExamplePredicate(Map("x" -> "bc"), Option(0),2), ExamplePredicate(Map("x" -> "aaaabc"),
+        Option(2),3), ExamplePredicate(Map("x" -> "abcabc"), Option(0),4)), 5)
     val count2 = new PyCount(x,new PyStringLiteral("aa",x.values.length, predicates2), predicates2)
     assertEquals("x.count(\"aa\")",count2.code)
     assertEquals(List(0, 0, 0, 2, 0),count2.values)
   }
 
   @Test def printingNodes() = {
-    val predicates1 = Predicates(List(ExamplePredicate(Map("inp" -> "'abc'"), Option("'abc '"))), 1)
+    val predicates1 = Predicates(List(ExamplePredicate(Map("inp" -> "'abc'"), Option("'abc '"),0)), 1)
     assertEquals("2",new PyIntLiteral(2,1, predicates1).code)
     val inp = new PyStringVariable("inp",predicates1)
     val addStrings = new PyStringConcat(inp,new PyStringLiteral(" ",1, predicates1), predicates1)

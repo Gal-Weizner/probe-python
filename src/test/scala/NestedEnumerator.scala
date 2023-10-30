@@ -15,10 +15,10 @@ import scala.io.Source.fromFile
 class NestedEnumerator extends JUnitSuite {
 
   @Test def enumerateVocabNoOE: Unit = {
-      val predicates1 = Predicates(List(ExamplePredicate(Map("inp"->"abc"), Option(""))), 1)
-      val predicates2 = Predicates(List(ExamplePredicate(Map("inp"->"abc"), Option("")),
-        ExamplePredicate(Map("inp"->"abc"), Option("")), ExamplePredicate(Map("inp"->"abc"), Option("")),
-        ExamplePredicate(Map("inp"->"abc"), Option(""))), 4)
+      val predicates1 = Predicates(List(ExamplePredicate(Map("inp"->"abc"), Option(""),0)), 1)
+      val predicates2 = Predicates(List(ExamplePredicate(Map("inp"->"abc"), Option(""),0),
+        ExamplePredicate(Map("inp"->"abc"), Option(""),1), ExamplePredicate(Map("inp"->"abc"), Option(""),2),
+        ExamplePredicate(Map("inp"->"abc"), Option(""),3)), 4)
       val stringLiteral: StringNode = new StringLiteral("abc", 1, predicates1)
       assertEquals(1, stringLiteral.values.length)
       assertEquals("abc", stringLiteral.values(0))
@@ -34,17 +34,17 @@ class NestedEnumerator extends JUnitSuite {
       assertEquals(List("abcdefklm"), concat.values)
       assertEquals(concat.updateValues(predicates2).values, List("abcdefklm", "abcdefklm", "abcdefklm", "abcdefklm"))
 
-      val predicates3 = Predicates(List(ExamplePredicate(Map("x" -> "abcde"), Option("")),
-        ExamplePredicate(Map("x" -> "a"), Option("")), ExamplePredicate(Map("x" -> "ab"), Option(""))),3)
+      val predicates3 = Predicates(List(ExamplePredicate(Map("x" -> "abcde"), Option(""),0),
+        ExamplePredicate(Map("x" -> "a"), Option(""),1), ExamplePredicate(Map("x" -> "ab"), Option(""),2)),3)
       val x = new PyStringVariable("x", predicates3)
       assertEquals(x.values, List("abcde", "a", "ab"))
-      val predicates4 = Predicates(List(ExamplePredicate(Map("x" -> "abcde"), Option("")),
-        ExamplePredicate(Map("x" -> "abcde"), Option("")), ExamplePredicate(Map("x" -> "abcde"), Option("")),
-        ExamplePredicate(Map("x" -> "a"), Option("")), ExamplePredicate(Map("x" -> "ab"), Option(""))), 5)
+      val predicates4 = Predicates(List(ExamplePredicate(Map("x" -> "abcde"), Option(""),0),
+        ExamplePredicate(Map("x" -> "abcde"), Option(""),1), ExamplePredicate(Map("x" -> "abcde"), Option(""),2),
+        ExamplePredicate(Map("x" -> "a"), Option(""),3), ExamplePredicate(Map("x" -> "ab"), Option(""),4)), 5)
       assertEquals(x.updateValues(predicates4).values, List("abcde", "abcde", "abcde", "a", "ab"))
 
-    val predicates5 = Predicates(List(ExamplePredicate(Map("inp"->"abc"), Option("")), ExamplePredicate(Map("inp"->"abc"), Option("")),
-      ExamplePredicate(Map("inp"->"abc"), Option("")),ExamplePredicate(Map("inp"->"abc"), Option(""))), 4)
+    val predicates5 = Predicates(List(ExamplePredicate(Map("inp"->"abc"), Option(""),0), ExamplePredicate(Map("inp"->"abc"), Option(""),1),
+      ExamplePredicate(Map("inp"->"abc"), Option(""),2),ExamplePredicate(Map("inp"->"abc"), Option(""),3)), 4)
     val literal: PyIntLiteral = new PyIntLiteral(42, 2, predicates1)
       assertEquals(literal.values, List(42, 42))
       assertEquals(literal.updateValues(predicates5).values, List(42, 42, 42, 42))
@@ -90,6 +90,7 @@ class NestedEnumerator extends JUnitSuite {
     assertEquals(enumerator.next().code,"len(s)")
     assertEquals(enumerator.next().code,"\" \".isalpha()")
     assertEquals(enumerator.next().code,"s.isalpha()")
+    assertEquals(enumerator.next().code,"s.isnumeric()")
     assertEquals(enumerator.next().code,"s.upper()")
     assertEquals(enumerator.next().code,"str(0)")
     assertEquals(enumerator.next().code,"str(1)")
