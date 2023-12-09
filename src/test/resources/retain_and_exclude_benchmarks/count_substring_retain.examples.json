@@ -24,6 +24,9 @@
     }
   ],
   "retain": [
-    "inp2.upper()"
+    {
+      "expression": "inp2.upper()",
+      "type": "String"
+    }
   ]
 }

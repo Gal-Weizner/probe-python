@@ -8,8 +8,8 @@ import sygus.{ExamplePredicate, ExpressionParser, Predicates, PythonPBETask, Use
 import scala.collection.mutable
 
 class ExpressionParserTests extends JUnitSuite{
-  val predicates = Predicates(List(ExamplePredicate(Map("x" -> 18), Option(19), 0), UsesVariablesPredicate(1)), 1)
-  val parser = new ExpressionParser(predicates)
+  val predicates1 = Predicates(List(ExamplePredicate(Map("x" -> 1, "y"-> 2), Option(1), 0), UsesVariablesPredicate(1)), 1)
+  val parser = new ExpressionParser(predicates1)
   @Test def parseArithAddition(): Unit = assertEquals("x + 1", parser.parse("x + 1").code)
   @Test def parseArithSubstraction(): Unit = assertEquals("x - 1", parser.parse("x - 1").code)
   val minus_one = parser.parse("-1")
@@ -23,8 +23,18 @@ class ExpressionParserTests extends JUnitSuite{
   @Test def parseTrue(): Unit = assertEquals("True", parser.parse("True").code)
 
   @Test def parseFalse(): Unit = assertEquals("False", parser.parse("False").code)
-  @Test def parseString(): Unit = assertEquals("abc", parser.parse("'abc'").code)
-//
+  @Test def parseString(): Unit = assertEquals("\"abc\"", parser.parse("'abc'").code)
+
+  val predicates2 = Predicates(List(ExamplePredicate(Map("x" -> List(1,2), "y"-> 2), Option(1), 0), UsesVariablesPredicate(1)), 1)
+  val parser2 = new ExpressionParser(predicates2)
+
+  @Test def parseListCompNodeArith(): Unit = assertEquals("[var + 1 for var in x]",
+    parser2.parse("[var + 1 for var in x]").code)
+
+  @Test def parseListCompNode(): Unit = assertEquals("[var for var in x]",
+    parser2.parse("[var for var in x]").code)
+
+  //
 //  @Test def parseEmptyString(): Unit = assertEquals(Some(""), parser.parse("''"))
 //
 //  @Test def parseStringDoubleQuotes(): Unit = assertEquals(Some("abc"), parser.parse("\"abc\""))

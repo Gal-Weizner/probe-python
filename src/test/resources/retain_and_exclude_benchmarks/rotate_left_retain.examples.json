@@ -1,0 +1,26 @@
+{
+  "varName": "rs",
+  "env": [
+    {
+      "#": "",
+      "$": "",
+      "s": "'qwertyu'",
+      "count": "1",
+      "rs": "'wertyuq'"
+    },
+    {
+      "time": 4,
+      "#": "",
+      "$": "",
+      "s": "'qwertyu'",
+      "count": "2",
+      "rs": "'ertyuqw'"
+    }
+  ],
+  "retain": [
+    {
+      "expression": "len(s)",
+      "type": "String"
+    }
+  ]
+}

@@ -272,7 +272,7 @@ abstract class MapCompVocabMaker(iterableType: Types, valueType: Types,
       if (lst.values.head.asInstanceOf[String].nonEmpty) {
         this.currList = lst
         val example_predicates = for (((predicate, listVal), idx) <- predicates_t.getExamplePredicates().zip(lst.values.take(predicates_t.num_of_examples)).zipWithIndex;
-            elem <- listVal.toString.toList) yield {
+            elem <- if (listVal != "") listVal.toString.toList else List("")) yield {
           predicate.updatePredicate(varName, elem.toString, idx)
         }
         val new_num_examples = example_predicates.length
@@ -535,7 +535,7 @@ abstract class FilteredMapVocabMaker(keyType: Types, valueType: Types,
       if (map.values.head.asInstanceOf[Map[_,_]].nonEmpty) {
         this.currMap = map
         val example_predicates = for (((predicate, listVal), idx) <- predicates_t.getExamplePredicates().zip(currMap.values.take(predicates_t.num_of_examples)).zipWithIndex;
-                                      elem <- listVal.toString.toList) yield {
+                                      elem <- if (listVal != "") listVal.toString.toList else List("")) yield {
           predicate.updatePredicate(keyName, elem.toString, idx)
         }
         val new_num_examples = example_predicates.length

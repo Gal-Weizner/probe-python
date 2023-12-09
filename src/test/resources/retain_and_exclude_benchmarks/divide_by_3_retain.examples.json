@@ -20,9 +20,9 @@
       "rs": "5"
     }
   ],
-  "exclude": [
+  "retain": [
     {
-      "expression": "len(str(inp1))",
+      "expression": "inp1 // 3",
       "type": "Int"
     }
   ]

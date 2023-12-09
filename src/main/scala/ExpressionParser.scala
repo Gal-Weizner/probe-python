@@ -1,10 +1,10 @@
 package sygus
 
-import ast.{ASTNode, IntAddition, IntIntMapCompNode, IntNode, IntStringMapCompNode, IntSubtraction, IterableNode, ListNode, ListVariable, MapNode, MapVariable, PyBinarySubstring, PyBoolLiteral, PyBoolVariable, PyContains, PyCount, PyEndsWith, PyFind, PyGreaterThan, PyIntAddition, PyIntDivision, PyIntListLookup, PyIntLiteral, PyIntMultiply, PyIntNode, PyIntSubtraction, PyIntToString, PyIntVariable, PyIsAlpha, PyIsNumeric, PyLength, PyLessThanEq, PyMapGet, PyMax, PyMin, PySortedStringList, PyStartsWith, PyStringConcat, PyStringJoin, PyStringListLookup, PyStringLiteral, PyStringLower, PyStringNode, PyStringSplit, PyStringStep, PyStringToInt, PyStringUpper, PyStringVariable, QuaternarySubstring, StringIntMapCompNode, StringListIntMapCompNode, StringListStringMapCompNode, StringLiteral, StringStringMapCompNode, TernarySubstring, Types}
+import ast.{ASTNode, BoolListNode, IntAddition, IntIntMapCompNode, IntListNode, IntNode, IntStringMapCompNode, IntSubtraction, IntToIntListCompNode, IntToStringListCompNode, IterableNode, ListNode, ListVariable, MapNode, MapVariable, PyBinarySubstring, PyBoolLiteral, PyBoolNode, PyBoolVariable, PyContains, PyCount, PyEndsWith, PyFind, PyGreaterThan, PyIntAddition, PyIntDivision, PyIntListLookup, PyIntLiteral, PyIntMultiply, PyIntNode, PyIntSubtraction, PyIntToString, PyIntVariable, PyIsAlpha, PyIsNumeric, PyLength, PyLessThanEq, PyMapGet, PyMax, PyMin, PySortedStringList, PyStartsWith, PyStringConcat, PyStringJoin, PyStringListLookup, PyStringLiteral, PyStringLower, PyStringNode, PyStringSplit, PyStringStep, PyStringToInt, PyStringUpper, PyStringVariable, QuaternarySubstring, StringIntMapCompNode, StringListIntMapCompNode, StringListNode, StringListStringMapCompNode, StringLiteral, StringStringMapCompNode, StringToIntListCompNode, StringToStringListCompNode, TernarySubstring, Types}
 import org.antlr.v4.runtime.tree.{ParseTree, TerminalNode}
 import org.antlr.v4.runtime.{BailErrorStrategy, BufferedTokenStream, CharStreams}
 import sygus.Python3Parser._
-import ast.Types.Types
+import ast.Types.{PyString, Types}
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable
@@ -48,6 +48,10 @@ class ExpressionParser(val predicates: Predicates) extends Python3BaseVisitor[AS
         lhs match {
           case i: PyIntNode => PyIntAddition(i, rhs.asInstanceOf[PyIntNode], this.predicates)
           case s: PyStringNode => PyStringConcat(s, rhs.asInstanceOf[PyStringNode], this.predicates)
+          case v: PyStringVariable => predicates.getExamplePredicates().head.context(v.name) match {
+            case _: Int => PyIntAddition(v.asInstanceOf[PyIntVariable], rhs.asInstanceOf[PyIntNode], this.predicates)
+            case _: String => PyStringConcat(v, rhs.asInstanceOf[PyStringNode], this.predicates)
+          }
         }
       case "-" => PyIntSubtraction(lhs.asInstanceOf[PyIntNode], rhs.asInstanceOf[PyIntNode], this.predicates)
       case "*" => PyIntMultiply(lhs.asInstanceOf[PyIntNode], rhs.asInstanceOf[PyIntNode], this.predicates)
@@ -80,10 +84,62 @@ class ExpressionParser(val predicates: Predicates) extends Python3BaseVisitor[AS
     arith_expression_handler(ctx.children.asScala)
   }
 
+  def parse_inner_list(ctx: Testlist_compContext): Unit =
+  {
+    val n_type = this.visit(ctx.test(0)).nodeType
+    val res = ctx.test().asScala.map(child => this.visit(child)).toList
+    n_type match {
+      case Types.PyInt => res.asInstanceOf[ListNode[PyIntNode]]
+      case Types.PyBool => res.asInstanceOf[ListNode[PyBoolNode]]
+      case Types.PyString => res.asInstanceOf[ListNode[PyStringNode]]
+    }
+  }
+
   override def visitTestlist_comp(ctx: Testlist_compContext): ASTNode =
     {
-      val res = this.visitChildren(ctx)
-      res
+      if(ctx.comp_for() == null)
+        {
+          return this.visitChildren(ctx)
+        }
+      val list = this.visit(ctx.comp_for().or_test())
+      val var_name = ctx.comp_for().exprlist().getText
+      val new_example_predicates = for (((example_predicate, listVal), idx) <- predicates.getExamplePredicates().zip(list.values.take(predicates.num_of_examples)).zipWithIndex;
+                                        elem <- listVal.toString.toList) yield {
+        list.asInstanceOf[ListNode[_]].childType match {
+          case Types.PyInt | Types.Int => example_predicate.updatePredicate(var_name, 1, idx)
+          case Types.PyString | Types.String => example_predicate.updatePredicate(var_name,"s", idx)
+          case Types.PyBool | Types.Bool => example_predicate.updatePredicate(var_name, true, idx)
+        }
+      }
+      val new_num_examples = new_example_predicates.length
+      val new_non_example_predicates_list = for ((pred, idx) <- predicates.getNonExamplePredicates().zipWithIndex) yield pred match {
+        case predicate: RetainPredicate => predicate.clonePredicate(idx + new_num_examples)
+        case predicate: UsesVariablesPredicate => new UsesVariablesPredicate(idx + new_num_examples)
+      }
+      val new_predicates = new_example_predicates ++ new_non_example_predicates_list
+      val newPredicatesClass = new Predicates(new_predicates, new_num_examples)
+      val new_parser = new ExpressionParser(newPredicatesClass)
+      val value = new_parser.visit(ctx.test(0))
+      val var_type = list.values.head.asInstanceOf[List[_]].head match
+        {
+        case _ : Int => Types.PyInt
+        case _ : String =>Types.PyString
+        case _ : Boolean => Types.PyBool
+      }
+      (var_type, value.nodeType) match {
+        case (Types.Int, Types.PyString) =>
+          new StringToStringListCompNode(list.asInstanceOf[ListNode[String]], value.asInstanceOf[PyStringNode],
+            var_name, predicates)
+        case (Types.PyString, Types.PyInt) =>
+          new StringToIntListCompNode(list.asInstanceOf[ListNode[String]],
+            value.asInstanceOf[PyIntNode], var_name, predicates)
+        case (Types.PyInt, Types.PyString) => new IntToStringListCompNode(list.asInstanceOf[ListNode[Int]],
+          value.asInstanceOf[PyStringNode], var_name, predicates)
+        case (Types.PyInt, Types.PyInt) => new IntToIntListCompNode(list.asInstanceOf[ListNode[Int]],
+          value.asInstanceOf[PyIntNode], var_name, predicates)
+        case(Types.PyString, Types.PyString) => new StringToStringListCompNode(list.asInstanceOf[ListNode[String]],
+          value.asInstanceOf[PyStringNode], var_name, predicates)
+      }
     }
   override def visitDictorsetmaker(ctx: DictorsetmakerContext): ASTNode =
   {
@@ -93,7 +149,7 @@ class ExpressionParser(val predicates: Predicates) extends Python3BaseVisitor[AS
     val new_example_predicates = for (((example_predicate, listVal), idx) <- predicates.getExamplePredicates().zip(list.values.take(predicates.num_of_examples)).zipWithIndex;
       elem <-listVal.toString.toList) yield {
       example_predicate.updatePredicate(var_name, elem.toString, idx)
-  }
+    }
     val new_num_examples = new_example_predicates.length
     val new_non_example_predicates_list = for((pred, idx) <- predicates.getNonExamplePredicates().zipWithIndex) yield pred match {
       case predicate: RetainPredicate => predicate.clonePredicate(idx + new_num_examples)

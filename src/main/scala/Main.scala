@@ -47,11 +47,14 @@ object Main extends App {
 //    "src/test/resources/new_benchmarks/reverse_list.examples.json"
 //    "src/test/resources/bester_benchmarks/reverse_list_bester.examples.json"
 //    "src/test/resources/retain_and_exclude_benchmarks/reverse_list_exclude.examples.json"
-    "src/test/resources/retain_and_exclude_benchmarks/count_substring_retain.examples.json"
+//    "src/test/resources/retain_and_exclude_benchmarks/count_sub_strings_wrong_exclude.examples.json"
 //    "src/test/resources/retain_and_exclude_benchmarks/count_substring_exclude_part_of_correct_solution.examples.json"
 //    "src/test/resources/retain_and_exclude_benchmarks/count_substring_wrong_retain.examples.json"
 //    "src/test/resources/retain_and_exclude_benchmarks/remove_outer_characters_retain.examples.json"
 //    "src/test/resources/retain_and_exclude_benchmarks/reverse_list_retain.examples.json"
+//    "src/test/resources/retain_and_exclude_benchmarks/rotate_left_bester2_retain.examples.json"
+//    "src/test/resources/new_benchmarks/count_substring_extended.examples.json"
+    "src/test/resources/retain_and_exclude_benchmarks/reverse_list_retain.examples.json"
   }
 
 

@@ -229,7 +229,7 @@ abstract class ListCompVocabMaker(inputListType: Types, outputListType: Types, s
       if (lst.values.head.asInstanceOf[List[_]].nonEmpty) {
         this.currList = lst
         val example_predicates = for (((predicate, listVal), idx) <- this.predicates.getExamplePredicates().zip(lst.values.take(this.predicates.num_of_examples)).zipWithIndex;
-                                      elem <- listVal.asInstanceOf[Iterable[Any]]) yield {
+                                      elem <- if (listVal.asInstanceOf[Iterable[Any]].isEmpty) List("") else listVal.asInstanceOf[Iterable[Any]]) yield {
           predicate.updatePredicate(varName, elem.toString, idx)
         }
         val new_num_examples = example_predicates.length

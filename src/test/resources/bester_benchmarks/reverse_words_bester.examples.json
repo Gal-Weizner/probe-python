@@ -4,21 +4,18 @@
     {
       "#": "",
       "$": "",
-      "step": "-1",
       "line": "'hello world!'",
       "rs": "'olleh !dlrow'"
     },
     {
       "#": "",
       "$": "",
-      "step": "-1",
       "line": "'Sorin Lerner'",
       "rs": "'Sorin renreL'"
     },
     {
       "#": "",
       "$": "",
-      "step": "-1",
       "line": "'Abc def ghi'",
       "rs": "'ihg fed cbA'"
     }

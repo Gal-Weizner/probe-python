@@ -1,0 +1,19 @@
+{
+  "varName": "rs",
+  "env": [
+    {
+      "#": "",
+      "$": "",
+      "inp1": "'Welcome to USA. usa usa usa usa!'",
+      "inp2": "'USA'",
+      "rs": "5"
+    },
+    {
+      "#": "",
+      "$": "",
+      "inp1": "'Welcome to USA. usa usa usa !'",
+      "inp2": "'usa'",
+      "rs": "4"
+    }
+  ]
+}

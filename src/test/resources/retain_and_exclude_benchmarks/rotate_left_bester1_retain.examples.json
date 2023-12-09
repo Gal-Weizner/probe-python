@@ -1,0 +1,33 @@
+{
+  "mistake": "Rotate wrong direction",
+  "varName": "rs",
+  "env": [
+    {
+      "#": "",
+      "$": "",
+      "s": "'qwertyu'",
+      "count": "1",
+      "rs": "'uqwerty'"
+    },
+    {
+      "#": "",
+      "$": "",
+      "s": "'qwertyu'",
+      "count": "2",
+      "rs": "'ertyuqw'"
+    },
+    {
+      "#": "",
+      "$": "",
+      "s": "'pineapple'",
+      "count": "2",
+      "rs": "'neapplepi'"
+    }
+  ],
+  "retain": [
+    {
+      "expression": "len(s)",
+      "type": "String"
+    }
+  ]
+}

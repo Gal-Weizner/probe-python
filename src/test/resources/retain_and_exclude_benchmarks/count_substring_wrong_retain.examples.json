@@ -23,7 +23,8 @@
       "rs": "4"
     }
   ],
-  "retain": [
-    "inp2.upper()"
-  ]
+  "retain": [{
+    "expression": "inp2.upper()",
+    "type": "String"
+  }]
 }

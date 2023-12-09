@@ -6,7 +6,7 @@ import org.apache.commons.cli.{CommandLineParser, DefaultParser, Options}
 import scala.io.Source.fromFile
 
 object Solutions {
-  var file = "src/test/resources/solutions_without_var.txt"
+  var file = "src/test/resources/solutions.txt"
   lazy val solutions = scala.io.Source.fromFile(file).getLines().map(line =>
     (line.substring(0,line.indexOf(' ')),line.substring(line.indexOf(' ') + 1))).toList.groupBy(_._1).toList.map(pair => (pair._1,pair._2.map(le => le._2))).toMap
 
@@ -50,7 +50,7 @@ object BenchmarksHarness extends App {
   val cmd = parser.parse(options, args)
 
   val all = cmd.getOptions.isEmpty //if no option provided, run all
-  val orig = false || cmd.hasOption('e')
+  val orig = all || cmd.hasOption('e')
   val Mistakes = all || cmd.hasOption('n')
   val garbage = false || cmd.hasOption('g')
   val RetainExclude = all || cmd.hasOption('o')
@@ -62,13 +62,13 @@ object BenchmarksHarness extends App {
     else Console.RED + programs.zipWithIndex.dropWhile{case (RankedProgram(tree,rate),idx) => !goldStandard.exists(gold => gold.code == tree.code)}.headOption.map{case (RankedProgram(tree,rate),idx) =>
       " " + tree.code + " " + rate + " (" + idx + ")" + " [" + programs.head.program.code + " " + programs.head.rank + "]"}.getOrElse(" NOT FOUND")  + Console.RESET
     val idx = programs.zipWithIndex.filter{case (program,idx) => goldStandard.exists(gold => gold.code == program.program.code)}.headOption.map(_._2.toString).getOrElse("")
-    "," + idx + "," + msec
+    "," + idx + "," + msec + "," + s"\n${programs.map(prog => s"${prog.program.code}\n")}"
   }
   val origBenchmarks: List[String] = if (orig) runBenchmarks("src/test/resources/new_benchmarks",identity,regularBenchmarkPrinter) else Nil
 
-  val contradictionBenchmarks = if (Mistakes) runBenchmarks("src/test/resources/bester_benchmarks", filename => filename.dropRight(5) + ".sl",regularBenchmarkPrinter) else Nil
+  val contradictionBenchmarks = if (Mistakes) runBenchmarks("src/test/resources/bester_benchmarks", identity,regularBenchmarkPrinter) else Nil
 
-  val garbageBenchmarks = if (RetainExclude)  runBenchmarks("src/test/resources/retain_and_exclude_benchmarks", filename => filename.dropRight(5) + ".sl",regularBenchmarkPrinter) else Nil
+  val reslBenchmarks = if (RetainExclude)  runBenchmarks("src/test/resources/retain_and_exclude_benchmarks", identity, regularBenchmarkPrinter) else Nil
 
   val tooHardBenchmarks = if (toohard) runBenchmarks("src/test/benchmarks/too-hard",identity, { (_origPrograms,goldStandard, msec) =>
     val programs = _origPrograms.take(5)
@@ -117,15 +117,15 @@ object BenchmarksHarness extends App {
     println
   }
   if (Mistakes) {
-    println("Modified benchmarks - no solution:")
+    println("Bester benchmarks with mistakes:")
     println("name,index of solution,time(msec)")
     contradictionBenchmarks.foreach(println)
     println
   }
-  if (garbage) {
-    println("Modified benchmarks - overfitted:")
+  if (RetainExclude) {
+    println("Retain or Exclude benchmarks:")
     println("name,index of solution,time(msec)")
-    garbageBenchmarks.foreach(println)
+    reslBenchmarks.foreach(println)
     println
   }
   if (toohard) {

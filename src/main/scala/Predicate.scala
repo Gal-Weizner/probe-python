@@ -79,22 +79,22 @@ object UsesVariablesPredicate{
 
 object RESLPrecidate
 {
-  def assign_numbers_to_tree_nodes_rec(node: ASTNode, leaves_map: mutable.Map[(Class[_], Any), Int],
-                                       v_map: mutable.Map[(Class[_], List[Int]), Int],
+  def assign_numbers_to_tree_nodes_rec(node: ASTNode, leaves_map: mutable.Map[(String, Any), Int],
+                                       v_map: mutable.Map[(String, List[Int]), Int],
                                        counter: Int): Int = {
     if (node.children.isEmpty) {
       val node_tuple = node match {
-        case lit_node: LiteralNode[_] => (lit_node.getClass, lit_node.value)
-        case var_node: VariableNode[_] => (var_node.getClass, var_node.name)
+        case lit_node: LiteralNode[_] => (lit_node.getClass.getName, lit_node.value)
+        case var_node: VariableNode[_] => (var_node.getClass.getName, var_node.name)
       }
       if (!leaves_map.contains(node_tuple)) {
         node match {
           case lit_node: LiteralNode[_] =>
-            leaves_map += (lit_node.getClass, lit_node.value) -> counter
+            leaves_map += (lit_node.getClass.getName, lit_node.value) -> counter
             counter + 1
 
           case var_node: VariableNode[_] =>
-            leaves_map += (var_node.getClass, var_node.name) -> counter
+            leaves_map += (var_node.getClass.getName, var_node.name) -> counter
             counter + 1
         }
       }
@@ -108,8 +108,8 @@ object RESLPrecidate
         current_counter = assign_numbers_to_tree_nodes_rec(child, leaves_map, v_map, current_counter)
       }
       val children_vector = node.children.map(c => idOf_internal(c, leaves_map.toMap, v_map.toMap)).toList
-      if (!v_map.contains((node.getClass, children_vector))) {
-        v_map += (node.getClass, children_vector) -> current_counter
+      if (!v_map.contains((node.getClass.getName, children_vector))) {
+        v_map += (node.getClass.getName, children_vector) -> current_counter
         current_counter + 1
       }
       else {
@@ -118,40 +118,40 @@ object RESLPrecidate
     }
   }
 
-  def assign_numbers_to_tree_nodes(node: ASTNode): (Map[(Class[_], Any), Int], Map[(Class[_], List[Int]), Int]) = {
-    val v_map = mutable.Map[(Class[_], List[Int]), Int]()
-    val leaves_map = mutable.Map[(Class[_], Any), Int]()
+  def assign_numbers_to_tree_nodes(node: ASTNode): (Map[(String, Any), Int], Map[(String, List[Int]), Int]) = {
+    val v_map = mutable.Map[(String, List[Int]), Int]()
+    val leaves_map = mutable.Map[(String, Any), Int]()
     var current_counter = 2
     for (child <- node.children) {
       current_counter = assign_numbers_to_tree_nodes_rec(child, leaves_map, v_map, current_counter)
     }
-    v_map += (node.getClass, node.children.map(c => idOf_internal(c, leaves_map.toMap, v_map.toMap)).toList) -> 1
+    v_map += (node.getClass.getName, node.children.map(c => idOf_internal(c, leaves_map.toMap, v_map.toMap)).toList) -> 1
     (leaves_map.toMap, v_map.toMap)
   }
 
-  def idOf_internal(node: ASTNode, leaves_map: Map[(Class[_], Any), Int],
-                    v_map: Map[(Class[_], List[Int]), Int]): Int = {
+  def idOf_internal(node: ASTNode, leaves_map: Map[(String, Any), Int],
+                    v_map: Map[(String, List[Int]), Int]): Int = {
     if (node.children.isEmpty) {
       val key = node match {
-        case lit_node: LiteralNode[_] => (lit_node.getClass, lit_node.value)
-        case var_node: VariableNode[_] => (var_node.getClass, var_node.name)
+        case lit_node: LiteralNode[_] => (lit_node.getClass.getName, lit_node.value)
+        case var_node: VariableNode[_] => (var_node.getClass.getName, var_node.name)
       }
       leaves_map.getOrElse(key, 0)
     }
     else {
-      v_map.getOrElse((node.getClass, node.children.map(c => idOf_internal(c, leaves_map, v_map)).toList), 0)
+      v_map.getOrElse((node.getClass.getName, node.children.map(c => idOf_internal(c, leaves_map, v_map)).toList), 0)
     }
   }
 }
 
 object RetainPredicate{
-  def apply (location: Int, leaves_map: Map[(Class[_], Any), Int],
-  v_map: Map[(Class[_], List[Int]), Int]) = {
+  def apply (location: Int, leaves_map: Map[(String, Any), Int],
+  v_map: Map[(String, List[Int]), Int]) = {
     new RetainPredicate(leaves_map, v_map, location)
   }
 
 }
-class RetainPredicate(val leaves_map: Map[(Class[_], Any), Int], val v_map: Map[(Class[_], List[Int]), Int],
+class RetainPredicate(val leaves_map: Map[(String, Any), Int], val v_map: Map[(String, List[Int]), Int],
                       val location: Int) extends Predicate
 {
 
@@ -178,15 +178,15 @@ class RetainPredicate(val leaves_map: Map[(Class[_], Any), Int], val v_map: Map[
 }
 
 object ExcludePredicate {
-  def apply(location: Int, leaves_map: Map[(Class[_], Any), Int],
-            v_map: Map[(Class[_], List[Int]), Int]): ExcludePredicate = {
+  def apply(location: Int, leaves_map: Map[(String, Any), Int],
+            v_map: Map[(String, List[Int]), Int]): ExcludePredicate = {
 //    val (leaves_map, v_map) = RESLPrecidate.assign_numbers_to_tree_nodes(expression_tree)
     new ExcludePredicate(leaves_map, v_map, location)
   }
 
 }
 
-class ExcludePredicate(val leaves_map: Map[(Class[_], Any), Int], val v_map: Map[(Class[_], List[Int]), Int],
+class ExcludePredicate(val leaves_map: Map[(String, Any), Int], val v_map: Map[(String, List[Int]), Int],
                       val location: Int) extends Predicate
 {
   def idOf(node: ASTNode): Int = {

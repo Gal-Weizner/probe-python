@@ -126,16 +126,15 @@ object PythonPBETask
     val num_examples = example_predicates_list.length
     if (input.contains("retain")) {
       retains_list = input("retain").asInstanceOf[List[Map[String, String]]].map(
-        retain_exp => new RESLParser(temp_predicates, retain_exp("type")).parse(retain_exp("expression"))).zipWithIndex.map {
-        case ((l_map, v_map), idx) => RetainPredicate(idx + num_examples, l_map.asInstanceOf[Map[(Class[_], Any), Int]],
-          v_map.asInstanceOf[Map[(Class[_], List[Int]), Int]])
+        retain_exp => new RESLParser(temp_predicates, retain_exp("type")).parse(retain_exp("expression"))).zipWithIndex.map{
+        case ((v_map, l_map), idx) => RetainPredicate(idx + num_examples, l_map.toMap, v_map.toMap)
       }
     }
     if (input.contains("exclude")) {
         excludes_list = input("exclude").asInstanceOf[List[Map[String, String]]].map(
         exclude_exp => new RESLParser(temp_predicates, exclude_exp("type")).parse(exclude_exp("expression"))).zipWithIndex.map {
-        case ((l_map, v_map), idx) => ExcludePredicate(idx + + retains_list.length + num_examples,
-          l_map.asInstanceOf[Map[(Class[_], Any), Int]], v_map.asInstanceOf[Map[(Class[_], List[Int]), Int]])
+        case ((v_map, l_map), idx) => ExcludePredicate(idx + + retains_list.length + num_examples,
+          l_map.toMap, v_map.toMap)
       }
     }
     val uses_variable_pred = UsesVariablesPredicate(num_examples + retains_list.length + excludes_list.length) // make sure it is always the last predicate

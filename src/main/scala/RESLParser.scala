@@ -10,18 +10,18 @@ import scala.collection.JavaConverters._
 import scala.collection.mutable
 
 class RESLParser(val predicates: Predicates, val type_clue: String) extends Python3BaseVisitor[(Int, Types.Types)] {
-  val v_map: mutable.Map[(Class[_], List[Int]), Int] = mutable.Map[(Class[_], List[Int]), Int]()
-  val leaves_map: mutable.Map[(Class[_], Any), Int] = mutable.Map[(Class[_], Any), Int]()
+  val v_map: mutable.Map[(String, List[Int]), Int] = mutable.Map[(String, List[Int]), Int]()
+  val leaves_map: mutable.Map[(String, Any), Int] = mutable.Map[(String, Any), Int]()
   var counter: Int = 2
 
-  def parse(code: String): (mutable.Map[(Class[_], List[Int]), Int], mutable.Map[(Class[_], Any), Int]) = {
+  def parse(code: String): (mutable.Map[(String, List[Int]), Int], mutable.Map[(String, Any), Int]) = {
     val lexer = new Python3Lexer(CharStreams.fromString(code.trim))
     lexer.removeErrorListeners()
     val parser = new Python3Parser(new BufferedTokenStream(lexer))
     parser.removeErrorListeners()
     parser.setErrorHandler(new BailErrorStrategy)
     this.visit(parser.comparison())
-    if(leaves_map.size == 1)
+    if(leaves_map.size == 1 && v_map.isEmpty)
       {
         val new_leaves_map = leaves_map.map(key => (key._1, 1))
         (v_map, new_leaves_map)
@@ -45,10 +45,10 @@ class RESLParser(val predicates: Predicates, val type_clue: String) extends Pyth
       assert(ctx.getChildCount == 3)
       val lhs_counter = this.visit(ctx.getChild(0))
       val rhs_counter = this.visit(ctx.getChild(2))
-      val node_class: Class[_] = ctx.comp_op(0).getText match {
-        case ">" => PyGreaterThan.getClass
-        case "<=" => PyLessThanEq.getClass
-        case "in" => PyContains.getClass
+      val node_class: String = ctx.comp_op(0).getText match {
+        case ">" => PyGreaterThan.getClass.getName.stripSuffix("$")
+        case "<=" => PyLessThanEq.getClass.getName.stripSuffix("$")
+        case "in" => PyContains.getClass.getName.stripSuffix("$")
       }
       if (!v_map.contains((node_class, List(lhs_counter._1, rhs_counter._1)))) {
         v_map += (node_class, List(lhs_counter._1, rhs_counter._1)) -> counter
@@ -59,15 +59,15 @@ class RESLParser(val predicates: Predicates, val type_clue: String) extends Pyth
   }
 
   def arithmetic(lhs: (Int, Types.Types), rhs: (Int, Types.Types), op: String): (Int, Types.Types) = {
-    val op_class: Class[_] = op match {
+    val op_class: String = op match {
       case "+" =>
         lhs._2 match {
-          case Types.PyInt => PyIntAddition.getClass
-          case Types.PyString => PyStringConcat.getClass
+          case Types.PyInt => PyIntAddition.getClass.getName.stripSuffix("$")
+          case Types.PyString => PyStringConcat.getClass.getName.stripSuffix("$")
         }
-      case "-" => PyIntSubtraction.getClass
-      case "*" => PyIntMultiply.getClass
-      case "//" => PyIntDivision.getClass
+      case "-" => PyIntSubtraction.getClass.getName.stripSuffix("$")
+      case "*" => PyIntMultiply.getClass.getName.stripSuffix("$")
+      case "//" => PyIntDivision.getClass.getName.stripSuffix("$")
     }
 
     if (!v_map.contains((op_class, List(lhs._1, rhs._1)))) {
@@ -131,17 +131,17 @@ class RESLParser(val predicates: Predicates, val type_clue: String) extends Pyth
     val map_node_type = (list._2, value._2) match {
       case (Types.PyString, Types.PyString) =>
         new StringStringMapCompNode(list.asInstanceOf[PyStringNode], key.asInstanceOf[PyStringNode],
-          value.asInstanceOf[PyStringNode], var_name, predicates).getClass
+          value.asInstanceOf[PyStringNode], var_name, predicates).getClass.getName.stripSuffix("$")
       case (Types.PyString, Types.PyInt) => new StringIntMapCompNode(list.asInstanceOf[PyStringNode], key.asInstanceOf[PyStringNode],
-        value.asInstanceOf[PyIntNode], var_name, predicates).getClass
+        value.asInstanceOf[PyIntNode], var_name, predicates).getClass.getName.stripSuffix("$")
       case (Types.StringList, Types.PyString) => new StringListStringMapCompNode(list.asInstanceOf[ListNode[String]], key.asInstanceOf[PyStringNode],
-        value.asInstanceOf[PyStringNode], var_name, predicates).getClass
+        value.asInstanceOf[PyStringNode], var_name, predicates).getClass.getName.stripSuffix("$")
       case (Types.StringList, Types.PyInt) => new StringListIntMapCompNode(list.asInstanceOf[ListNode[String]], key.asInstanceOf[PyStringNode],
-        value.asInstanceOf[PyIntNode], var_name, predicates).getClass
+        value.asInstanceOf[PyIntNode], var_name, predicates).getClass.getName.stripSuffix("$")
       case (Types.PyInt, Types.PyString) => new IntStringMapCompNode(list.asInstanceOf[ListNode[Int]], key.asInstanceOf[PyIntNode],
-        value.asInstanceOf[PyStringNode], var_name, predicates).getClass
+        value.asInstanceOf[PyStringNode], var_name, predicates).getClass.getName.stripSuffix("$")
       case (Types.PyInt, Types.PyInt) => new IntIntMapCompNode(list.asInstanceOf[ListNode[Int]], key.asInstanceOf[PyIntNode],
-        value.asInstanceOf[PyIntNode], var_name, predicates).getClass
+        value.asInstanceOf[PyIntNode], var_name, predicates).getClass.getName.stripSuffix("$")
     }
     if (!v_map.contains((map_node_type, List(list._1, key._1, value._1)))) {
       v_map += (map_node_type, List(list._1, key._1, value._1)) -> counter
@@ -172,10 +172,10 @@ class RESLParser(val predicates: Predicates, val type_clue: String) extends Pyth
             case (1, None) =>
               val node_type = lhs_tuple._2 match {
                 case ast.Types.PyString =>
-                  PyBinarySubstring.getClass
-                case ast.Types.StringList => PyStringListLookup.getClass
-                case ast.Types.IntList => PyIntListLookup.getClass
-                case ast.Types.Map(Types.PyString, Types.Int) => PyMapGet.getClass
+                  PyBinarySubstring.getClass.getName.stripSuffix("$")
+                case ast.Types.StringList => PyStringListLookup.getClass.getName.stripSuffix("$")
+                case ast.Types.IntList => PyIntListLookup.getClass.getName.stripSuffix("$")
+                case ast.Types.Map(Types.PyString, Types.Int) => PyMapGet.getClass.getName.stripSuffix("$")
               }
               if (!v_map.contains((node_type, List(lhs_tuple._1, tests_numbers.head)))) {
                 v_map += (node_type, List(lhs_tuple._1, tests_numbers.head)) -> counter
@@ -185,7 +185,7 @@ class RESLParser(val predicates: Predicates, val type_clue: String) extends Pyth
                 lhs_tuple._2)
             case (2, None) =>
               assert(lhs_tuple._2 == ast.Types.PyString)
-              val node_type = TernarySubstring.getClass
+              val node_type = TernarySubstring.getClass.getName.stripSuffix("$")
               if (!v_map.contains((node_type, List(lhs_tuple._1, tests_numbers.head, tests_numbers.last)))) {
                 v_map += (node_type, List(lhs_tuple._1, tests_numbers.head, tests_numbers.last)) -> counter
                 this.counter = counter + 1
@@ -194,7 +194,7 @@ class RESLParser(val predicates: Predicates, val type_clue: String) extends Pyth
                 lhs_tuple._2)
             case (2, Some(slice)) =>
               assert(lhs_tuple._2 == ast.Types.PyString)
-              val node_type = QuaternarySubstring.getClass
+              val node_type = QuaternarySubstring.getClass.getName.stripSuffix("$")
               if (!v_map.contains((node_type, List(lhs_tuple._1, tests_numbers.head, tests_numbers(1), slice._1)))) {
                 v_map += (node_type, List(lhs_tuple._1, tests_numbers.head, tests_numbers(1), slice._1)) -> counter
                 this.counter = counter + 1
@@ -202,7 +202,7 @@ class RESLParser(val predicates: Predicates, val type_clue: String) extends Pyth
               (v_map((node_type, List(lhs_tuple._1, tests_numbers.head, tests_numbers.last))),
                 lhs_tuple._2)
             case (0, Some(slice)) =>
-              val node_type = PyStringStep.getClass
+              val node_type = PyStringStep.getClass.getName.stripSuffix("$")
               if (!v_map.contains((node_type, List(lhs_tuple._1, slice._1)))) {
                 v_map += (node_type, List(lhs_tuple._1, slice._1)) -> counter
                 this.counter = counter + 1
@@ -219,17 +219,19 @@ class RESLParser(val predicates: Predicates, val type_clue: String) extends Pyth
             val func_name = atom.NAME().getText
             val node_type = func_name match {
               case "len" => assert(args.length == 1)
-                PyLength.getClass
+                PyLength.getClass.getName.stripSuffix("$")
               case "max" => assert(args.length == 1)
-                PyMax.getClass
+                PyMax.getClass.getName.stripSuffix("$")
               case "str" => assert(args.length == 1)
-                PyIntToString.getClass
+                PyIntToString.getClass.getName.stripSuffix("$")
               case "int" => assert(args.length == 1)
-                PyStringToInt.getClass
+                PyStringToInt.getClass.getName.stripSuffix("$")
               case "min" => assert(args.length == 1)
-                PyMin.getClass
+                PyMin.getClass.getName.stripSuffix("$")
               case "sorted" => assert(args.length == 1)
-                PySortedStringList.getClass
+                PySortedStringList.getClass.getName.stripSuffix("$")
+              case "split" => assert(args.length == 1)
+              PyStringSplit.getClass.getName.stripSuffix("$")
             }
             if (!v_map.contains((node_type, List(args.head._1)))) {
               v_map += (node_type, List(args.head._1)) -> counter
@@ -244,24 +246,24 @@ class RESLParser(val predicates: Predicates, val type_clue: String) extends Pyth
             val node_type = func_name match {
               case "isalpha" =>
                 assert(args.isEmpty)
-                PyIsAlpha.getClass
-              case "split" => PyStringSplit.getClass
-              case "isnumeric" => PyIsNumeric.getClass
-              case "upper" => PyStringUpper.getClass
-              case "lower" => PyStringLower.getClass
-              case "find" => PyFind.getClass
-              case "count" => PyCount.getClass
-              case "startswith" => PyStartsWith.getClass
-              case "endswith" => PyEndsWith.getClass
-              case "join" => PyStringJoin.getClass
+                PyIsAlpha.getClass.getName.stripSuffix("$")
+              case "split" => PyStringSplit.getClass.getName.stripSuffix("$")
+              case "isnumeric" => PyIsNumeric.getClass.getName.stripSuffix("$")
+              case "upper" => PyStringUpper.getClass.getName.stripSuffix("$")
+              case "lower" => PyStringLower.getClass.getName.stripSuffix("$")
+              case "find" => PyFind.getClass.getName.stripSuffix("$")
+              case "count" => PyCount.getClass.getName.stripSuffix("$")
+              case "startswith" => PyStartsWith.getClass.getName.stripSuffix("$")
+              case "endswith" => PyEndsWith.getClass.getName.stripSuffix("$")
+              case "join" => PyStringJoin.getClass.getName.stripSuffix("$")
             }
             args.length match {
               case 0 =>
                 if (!v_map.contains((node_type, List(lhs._1)))) {
-                  v_map += (node_type, List(args.head._1)) -> counter
+                  v_map += (node_type, List(lhs._1)) -> counter
                   this.counter = counter + 1
                 }
-                (v_map((node_type, List(args.head._1))),
+                (v_map((node_type, List(lhs._1))),
                   Types.PyString)
               case 1 =>
                 if (!v_map.contains((node_type, List(lhs._1, args.head._1)))) {
@@ -286,11 +288,12 @@ class RESLParser(val predicates: Predicates, val type_clue: String) extends Pyth
     }
   }
   
-  def check_and_add_leaves_map(node_class: Class[_], value: Any): Int = {
+  def check_and_add_leaves_map(node_class: String, value: Any): Int = {
     if (!leaves_map.contains(node_class, value))
       {
         leaves_map += (node_class, value) -> counter
-      }F
+        this.counter = counter + 1
+      }
     leaves_map((node_class, value))
   }
   
@@ -301,12 +304,12 @@ class RESLParser(val predicates: Predicates, val type_clue: String) extends Pyth
         // TODO Is there a more robust way of removing string quotes?
         val value = strs.stream().map(_.getSymbol.getText).map((v1: String) => v1.substring(1, v1.length - 1))
           .reduce("", (t: String, u: String) => t + u)
-        (check_and_add_leaves_map(PyStringLiteral.getClass, value),
-          PyStringLiteral.getClass.asInstanceOf[Types.Types])
+        (check_and_add_leaves_map(PyStringLiteral.getClass.getName.stripSuffix("$"), value),
+          Types.PyString)
       }
-      else if (ctx.TRUE() != null) (check_and_add_leaves_map(PyBoolLiteral.getClass, true), Types.PyBool)
-      else if (ctx.FALSE() != null) (check_and_add_leaves_map(PyBoolLiteral.getClass, false),  Types.PyBool)
-      else if (ctx.NUMBER() != null) (check_and_add_leaves_map(PyIntLiteral.getClass, ctx.getText.toInt),  Types.PyInt)
+      else if (ctx.TRUE() != null) (check_and_add_leaves_map(PyBoolLiteral.getClass.getName.stripSuffix("$"), true), Types.PyBool)
+      else if (ctx.FALSE() != null) (check_and_add_leaves_map(PyBoolLiteral.getClass.getName.stripSuffix("$"), false),  Types.PyBool)
+      else if (ctx.NUMBER() != null) (check_and_add_leaves_map(PyIntLiteral.getClass.getName.stripSuffix("$"), ctx.getText.toInt),  Types.PyInt)
       else if (ctx.OPEN_BRACE() != null) {
         // We have a dict or set!
         val thing = ctx.dictorsetmaker()
@@ -337,15 +340,15 @@ class RESLParser(val predicates: Predicates, val type_clue: String) extends Pyth
         if (predicates.getExamplePredicates().head.context.contains(var_name)) {
           val value = predicates.getExamplePredicates().head.context(var_name)
           val (node_class, value_type) = value match {
-            case _: Int => (PyIntVariable.getClass, Types.PyInt)
-            case _: Boolean => (PyBoolVariable.getClass, Types.PyBool)
-            case _: String => (PyStringVariable.getClass, Types.PyString)
+            case _: Int => (PyIntVariable.getClass.getName.stripSuffix("$"), Types.PyInt)
+            case _: Boolean => (PyBoolVariable.getClass.getName.stripSuffix("$"), Types.PyBool)
+            case _: String => (PyStringVariable.getClass.getName.stripSuffix("$"), Types.PyString)
             case l: List[_] =>
               val t = if (l.isEmpty) Types.Int else l.head match {
                 case _: Int => Types.Int
                 case _: String => Types.PyString
               }
-              (ListVariable.getClass, t)
+              (ListVariable.getClass.getName.stripSuffix("$"), t)
             case m: Map[_, _] =>
               /// check key value types
               val key_t = if (m.isEmpty) Types.Int else m.head._1 match {
@@ -356,7 +359,7 @@ class RESLParser(val predicates: Predicates, val type_clue: String) extends Pyth
                 case _: Int => Types.Int
                 case _: String => Types.PyString
               }
-              (MapVariable.getClass, value_t)
+              (MapVariable.getClass.getName.stripSuffix("$"), value_t)
           }
           if (!leaves_map.contains((node_class, var_name))) {
             leaves_map += (node_class, var_name) -> counter
@@ -366,9 +369,9 @@ class RESLParser(val predicates: Predicates, val type_clue: String) extends Pyth
         }
         else {
           val (node_class, var_type) = type_clue match {
-            case "Int" => (PyIntVariable.getClass, Types.PyInt)
-            case "String" => (PyBoolVariable.getClass, Types.PyString)
-            case "Boolean" => (PyStringVariable.getClass, Types.PyBool)
+            case "Int" => (PyIntVariable.getClass.getName.stripSuffix("$"), Types.PyInt)
+            case "Boolean" => (PyBoolVariable.getClass.getName.stripSuffix("$"), Types.PyBool)
+            case "String" => (PyStringVariable.getClass.getName.stripSuffix("$"), Types.PyString)
           }
           if (!leaves_map.contains((node_class, var_name))) {
             leaves_map += (node_class, var_name) -> counter
@@ -385,8 +388,8 @@ class RESLParser(val predicates: Predicates, val type_clue: String) extends Pyth
     if (ctx.MINUS() != null) {
       // Probably a negative number?
       val child = this.visitChildren(ctx)
-      val node_type: Class[_] = child match {
-        case a if a._2 == PyIntLiteral.getClass.asInstanceOf[Types.Types] => PyIntLiteral.getClass
+      val node_type: String = child match {
+        case a if a._2 == Types.PyInt => PyIntLiteral.getClass.getName.stripSuffix("$")
       }
       if (!v_map.contains((node_type, List(child._1)))) {
         v_map += (node_type, List(child._1)) -> counter

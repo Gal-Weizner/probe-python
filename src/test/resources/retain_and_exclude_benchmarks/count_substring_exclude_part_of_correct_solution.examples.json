@@ -24,6 +24,9 @@
     }
   ],
   "exclude": [
-    "inp1.upper()"
+    {
+      "expression":"inp1.upper()",
+      "type": "String"
+    }
   ]
 }
